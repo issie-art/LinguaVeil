@@ -1,0 +1,127 @@
+/* ===== LinguaVeil — Injected Content Styles ===== */
+
+/*
+ * Word annotation spans
+ * Validates: Requirements 4.1, 4.2, 4.3
+ */
+.lv-word {
+  display: inline;
+  line-height: inherit;
+  letter-spacing: inherit;
+  word-spacing: inherit;
+  margin: 0;
+  padding: 0;
+}
+
+/* Ordinary word: gray dashed underline */
+.lv-ordinary {
+  border-bottom: 1px dashed #aaa;
+  cursor: pointer;
+}
+
+/* Technical word: blue solid underline */
+.lv-technical {
+  border-bottom: 1px solid #3b82f6;
+  cursor: pointer;
+}
+
+/*
+ * Tooltip floating panel
+ * Validates: Requirements 5.1, 5.2, 5.3, 5.5, 5.6
+ */
+.lv-tooltip {
+  display: none;
+  position: fixed;
+  z-index: 2147483647;
+  background: #1f2937;
+  color: #f3f4f6;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  padding: 12px 14px;
+  max-width: 300px;
+  font-size: 13px;
+  line-height: 1.5;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  pointer-events: auto;
+}
+
+/* Tooltip word title */
+.lv-tooltip-word {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: #fff;
+}
+
+/* Part of speech tag */
+.lv-tooltip-pos {
+  display: inline-block;
+  font-size: 11px;
+  color: #9ca3af;
+  background: #374151;
+  border-radius: 4px;
+  padding: 1px 6px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+/* Definition text */
+.lv-tooltip-def {
+  margin-top: 6px;
+  color: #d1d5db;
+  font-size: 13px;
+}
+
+/* "Mastered" button */
+.lv-tooltip-mastered {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 4px 12px;
+  font-size: 12px;
+  color: #fff;
+  background: #3b82f6;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.lv-tooltip-mastered:hover {
+  background: #2563eb;
+}
+
+/* "Add word" button (selection popup) */
+.lv-tooltip-add {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 4px 12px;
+  font-size: 12px;
+  color: #fff;
+  background: #10b981;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.lv-tooltip-add:hover {
+  background: #059669;
+}
+
+.lv-tooltip-add--done {
+  background: #6b7280;
+  cursor: default;
+}
+
+/* Hint text */
+.lv-tooltip-hint {
+  margin-top: 6px;
+  font-size: 11px;
+  color: #9ca3af;
+}
+
+/* Loading state */
+.lv-tooltip-loading {
+  color: #6b7280;
+  font-style: italic;
+}
