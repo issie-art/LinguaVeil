@@ -81,10 +81,10 @@ export function initTooltip(onAdded?: () => void): void {
       if (!selection || selection.isCollapsed) return;
 
       const text = selection.toString().trim();
-      if (!text || text.length > 200) return;
+      if (!text || text.length > 1000) return;
 
       // 判断是单词还是句子/短语
-      const isSingleWord = /^[a-zA-Z]{3,}$/.test(text);
+      const isSingleWord = /^[a-zA-Z]{1,}$/.test(text);
 
       // 如果翻译模式关闭，只处理 .markdown-body 内的单词（用于添加生词）
       // 如果翻译模式开启，处理所有 .markdown-body 内的选中文本
