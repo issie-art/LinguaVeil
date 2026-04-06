@@ -26,7 +26,7 @@
     - 所有操作使用 `chrome.storage.local`，失败时 console.error 并保持扩展正常运行
     - _需求: 7.1, 7.2, 7.3, 7.4, 7.5, 7.6_
 
-  - [ ]* 1.4 为 Word_Store 编写单元测试
+  - [ ]\* 1.4 为 Word_Store 编写单元测试
     - 测试 `getMasteredWords` 返回正确的 Set
     - 测试 `markAsMastered` 写入后可查询
     - 测试 `saveWord` 和 `queryWords` 的筛选逻辑
@@ -41,11 +41,11 @@
     - 实现 `extractScannableText(text)` 函数，移除 LaTeX 公式部分，返回可扫描文本片段及其偏移量
     - _需求: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6_
 
-  - [ ]* 2.2 为 Code_Guard 编写属性测试
+  - [ ]\* 2.2 为 Code_Guard 编写属性测试
     - **属性 1: isProtectedNode 对 SKIP_TAGS 内的节点始终返回 true**
     - **验证: 需求 2.1, 2.2, 2.3, 2.4**
 
-  - [ ]* 2.3 为 Code_Guard 编写单元测试
+  - [ ]\* 2.3 为 Code_Guard 编写单元测试
     - 测试 `isProtectedNode` 对 `<code>`、`<pre>`、`<script>`、`<style>` 及其子节点返回 true
     - 测试 `isProtectedNode` 对普通 `<p>`、`<span>` 节点返回 false
     - 测试 `extractScannableText` 正确移除 `$...$` 和 `$$...$$` 公式
@@ -69,13 +69,13 @@
       - 移除所有 `.lv-word` span，恢复原始文本节点
     - _需求: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 4.1, 4.2, 4.3, 4.4, 4.5_
 
-  - [ ]* 3.2 为 Word_Scanner 编写属性测试
+  - [ ]\* 3.2 为 Word_Scanner 编写属性测试
     - **属性 2: scanContainer 永远不会返回长度 < 3 的单词**
     - **验证: 需求 3.6**
     - **属性 3: scanContainer 永远不会返回已掌握词汇列表中的单词**
     - **验证: 需求 3.2**
 
-  - [ ]* 3.3 为 Word_Scanner 编写单元测试
+  - [ ]\* 3.3 为 Word_Scanner 编写单元测试
     - 测试从文本节点中正确提取英文单词
     - 测试忽略长度 < 3 的单词
     - 测试忽略含数字的字符串
@@ -105,7 +105,7 @@
     - 浮窗内添加"已掌握"按钮，点击后调用 Word_Store 标记单词
     - _需求: 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 7.2_
 
-  - [ ]* 5.3 为 Tooltip_Widget 编写单元测试
+  - [ ]\* 5.3 为 Tooltip_Widget 编写单元测试
     - 测试 initTooltip 创建浮窗 DOM 元素
     - 测试 showTooltip 正确定位浮窗
     - 测试 hideTooltip 的 200ms 延迟逻辑
@@ -157,7 +157,7 @@
     - 使用简洁的 UI 样式，适配 Popup 面板尺寸
     - _需求: 6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 6.7, 6.8_
 
-  - [ ]* 10.2 为 Popup_Panel 编写单元测试
+  - [ ]\* 10.2 为 Popup_Panel 编写单元测试
     - 测试初始渲染三个开关
     - 测试学习模式默认开启
     - 测试写作/翻译模式显示为禁用

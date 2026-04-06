@@ -4,15 +4,15 @@
  * 2. hover 标注词：显示释义 + "已掌握"按钮
  */
 
-import { addWord, markAsMastered, getWord } from '../lib/word-store';
-import { translate } from '../lib/translate';
-import { TECH_WORDS } from '../lib/tech-words';
+import { addWord, markAsMastered, getWord } from "../lib/word-store";
+import { translate } from "../lib/translate";
+import { TECH_WORDS } from "../lib/tech-words";
 
 export interface TooltipData {
   word: string;
   definition: string;
   partOfSpeech: string;
-  type: 'ordinary' | 'technical';
+  type: "ordinary" | "technical";
 }
 
 let tooltipEl: HTMLDivElement | null = null;
@@ -25,11 +25,14 @@ let onWordAdded: (() => void) | null = null;
 let translationEnabled = true;
 
 function clearHideTimer(): void {
-  if (hideTimer !== null) { clearTimeout(hideTimer); hideTimer = null; }
+  if (hideTimer !== null) {
+    clearTimeout(hideTimer);
+    hideTimer = null;
+  }
 }
 
 function esc(str: string): string {
-  const d = document.createElement('div');
+  const d = document.createElement("div");
   d.textContent = str;
   return d.innerHTML;
 }
@@ -48,29 +51,33 @@ export function initTooltip(onAdded?: () => void): void {
   if (tooltipEl) return;
   onWordAdded = onAdded ?? null;
 
-  tooltipEl = document.createElement('div');
-  tooltipEl.className = 'lv-tooltip';
+  tooltipEl = document.createElement("div");
+  tooltipEl.className = "lv-tooltip";
   document.body.appendChild(tooltipEl);
 
-  tooltipEl.addEventListener('mouseenter', () => clearHideTimer());
-  tooltipEl.addEventListener('mouseleave', () => hideTooltip());
+  tooltipEl.addEventListener("mouseenter", () => clearHideTimer());
+  tooltipEl.addEventListener("mouseleave", () => hideTooltip());
 
   // === hover 已标注生词 ===
   onMouseOver = (e: Event) => {
-    const target = (e.target as HTMLElement).closest?.('.lv-word') as HTMLElement | null;
+    const target = (e.target as HTMLElement).closest?.(
+      ".lv-word",
+    ) as HTMLElement | null;
     if (!target) return;
     clearHideTimer();
     showAnnotationTooltip(target);
   };
 
   onMouseOut = (e: Event) => {
-    const target = (e.target as HTMLElement).closest?.('.lv-word') as HTMLElement | null;
+    const target = (e.target as HTMLElement).closest?.(
+      ".lv-word",
+    ) as HTMLElement | null;
     if (!target) return;
     hideTooltip();
   };
 
-  document.addEventListener('mouseover', onMouseOver);
-  document.addEventListener('mouseout', onMouseOut);
+  document.addEventListener("mouseover", onMouseOver);
+  document.addEventListener("mouseout", onMouseOut);
 
   // === 划词选择 ===
   onMouseUp = (e: Event) => {
@@ -78,26 +85,41 @@ export function initTooltip(onAdded?: () => void): void {
 
     setTimeout(() => {
       const selection = window.getSelection();
-      if (!selection || selection.isCollapsed) return;
+      if (!selection || selection.isCollapsed) {
+        console.log('[LinguaVeil] mouseup: no selection');
+        return;
+      }
 
       const text = selection.toString().trim();
-      if (!text || text.length > 1000) return;
+      if (!text || text.length > 1000) {
+        console.log('[LinguaVeil] mouseup: text empty or too long', text?.length);
+        return;
+      }
 
       // 判断是单词还是句子/短语
-      const isSingleWord = /^[a-zA-Z]{1,}$/.test(text);
+      const isSingleWord = /^[a-zA-Z]{3,}$/.test(text);
 
-      // 如果翻译模式关闭，只处理 .markdown-body 内的单词（用于添加生词）
-      // 如果翻译模式开启，处理所有 .markdown-body 内的选中文本
-      if (!translationEnabled && !isSingleWord) return;
+      // 如果翻译模式关闭，只处理单词（用于添加生词）
+      if (!translationEnabled && !isSingleWord) {
+        console.log('[LinguaVeil] mouseup: translation off and not a single word');
+        return;
+      }
 
-      // 确保在 .markdown-body 内
+      // 确保不在输入框/编辑器内
       const anchorNode = selection.anchorNode;
       if (!anchorNode) return;
-      const el = anchorNode.nodeType === Node.TEXT_NODE
-        ? anchorNode.parentNode as Element | null
-        : anchorNode as Element;
-      if (!el || !el.closest?.('.markdown-body')) return;
+      const el =
+        anchorNode.nodeType === Node.TEXT_NODE
+          ? (anchorNode.parentNode as Element | null)
+          : (anchorNode as Element);
+      if (!el) return;
+      // 排除输入框和编辑器
+      if (el.closest?.('textarea, input, [contenteditable="true"], .CodeMirror, .cm-editor')) {
+        console.log('[LinguaVeil] mouseup: inside editable area');
+        return;
+      }
 
+      console.log('[LinguaVeil] mouseup: showing tooltip for', text);
       const range = selection.getRangeAt(0);
       const rect = range.getBoundingClientRect();
 
@@ -107,7 +129,7 @@ export function initTooltip(onAdded?: () => void): void {
 
   onClickOutside = (e: Event) => {
     if (tooltipEl?.contains(e.target as Node)) return;
-    if ((e.target as HTMLElement).closest?.('.lv-word')) return;
+    if ((e.target as HTMLElement).closest?.(".lv-word")) return;
     setTimeout(() => {
       const sel = window.getSelection();
       if (sel && !sel.isCollapsed) return;
@@ -115,10 +137,9 @@ export function initTooltip(onAdded?: () => void): void {
     }, 20);
   };
 
-  document.addEventListener('mouseup', onMouseUp);
-  document.addEventListener('mousedown', onClickOutside);
+  document.addEventListener("mouseup", onMouseUp);
+  document.addEventListener("mousedown", onClickOutside);
 }
-
 
 /**
  * hover 已标注生词 → 从 store 读取释义 + 已掌握按钮
@@ -126,27 +147,28 @@ export function initTooltip(onAdded?: () => void): void {
 async function showAnnotationTooltip(target: HTMLElement): Promise<void> {
   if (!tooltipEl) return;
 
-  const word = target.dataset.word ?? '';
-  const isTech = target.classList.contains('lv-technical');
+  const word = target.dataset.word ?? "";
 
   // 先从 store 读取已保存的释义
   const stored = await getWord(word);
-  const definition = stored?.definition || '加载中...';
-  const pos = stored?.partOfSpeech || '';
+  const definition = stored?.definition || "加载中...";
+  const pos = stored?.partOfSpeech || "";
 
   tooltipEl.innerHTML = `
-    <div class="lv-tooltip-word">${esc(word)}${pos ? `<span class="lv-tooltip-pos">${esc(pos)}</span>` : ''}</div>
+    <div class="lv-tooltip-word">${esc(word)}${pos ? `<span class="lv-tooltip-pos">${esc(pos)}</span>` : ""}</div>
     <div class="lv-tooltip-def">${esc(definition)}</div>
     <button class="lv-tooltip-mastered">✓ 已掌握</button>
   `;
 
-  const btn = tooltipEl.querySelector('.lv-tooltip-mastered') as HTMLButtonElement;
-  btn?.addEventListener('click', async () => {
+  const btn = tooltipEl.querySelector(
+    ".lv-tooltip-mastered",
+  ) as HTMLButtonElement;
+  btn?.addEventListener("click", async () => {
     await markAsMastered(word);
     const lower = word.toLowerCase();
-    document.querySelectorAll('.lv-word').forEach((span) => {
+    document.querySelectorAll(".lv-word").forEach((span) => {
       if ((span as HTMLElement).dataset.word?.toLowerCase() === lower) {
-        const textNode = document.createTextNode(span.textContent ?? '');
+        const textNode = document.createTextNode(span.textContent ?? "");
         span.parentNode?.replaceChild(textNode, span);
       }
     });
@@ -159,7 +181,7 @@ async function showAnnotationTooltip(target: HTMLElement): Promise<void> {
   // 如果释义是空的，异步翻译并更新
   if (!stored?.definition) {
     const result = await translate(word);
-    const defEl = tooltipEl?.querySelector('.lv-tooltip-def');
+    const defEl = tooltipEl?.querySelector(".lv-tooltip-def");
     if (defEl) defEl.textContent = result.translation;
   }
 }
@@ -167,14 +189,17 @@ async function showAnnotationTooltip(target: HTMLElement): Promise<void> {
 /**
  * 划词弹窗：翻译 + 添加生词（单词时）
  */
-async function showSelectionTooltip(rect: DOMRect, text: string): Promise<void> {
+async function showSelectionTooltip(
+  rect: DOMRect,
+  text: string,
+): Promise<void> {
   if (!tooltipEl) return;
 
   const isSingleWord = /^[a-zA-Z]{3,}$/.test(text);
 
   // 先显示加载状态
   tooltipEl.innerHTML = `
-    <div class="lv-tooltip-word">${esc(text.length > 50 ? text.slice(0, 50) + '...' : text)}</div>
+    <div class="lv-tooltip-word">${esc(text.length > 50 ? text.slice(0, 50) + "..." : text)}</div>
     <div class="lv-tooltip-def lv-tooltip-loading">翻译中...</div>
   `;
   positionTooltip(rect);
@@ -186,8 +211,10 @@ async function showSelectionTooltip(rect: DOMRect, text: string): Promise<void> 
 
   // 构建内容
   let html = `
-    <div class="lv-tooltip-word">${esc(text.length > 50 ? text.slice(0, 50) + '...' : text)}${
-      result.partOfSpeech ? `<span class="lv-tooltip-pos">${esc(result.partOfSpeech)}</span>` : ''
+    <div class="lv-tooltip-word">${esc(text.length > 50 ? text.slice(0, 50) + "..." : text)}${
+      result.partOfSpeech
+        ? `<span class="lv-tooltip-pos">${esc(result.partOfSpeech)}</span>`
+        : ""
     }</div>
     <div class="lv-tooltip-def">${esc(result.translation)}</div>
   `;
@@ -207,14 +234,18 @@ async function showSelectionTooltip(rect: DOMRect, text: string): Promise<void> 
 
   // 绑定添加生词按钮
   if (isSingleWord) {
-    const btn = tooltipEl.querySelector('.lv-tooltip-add') as HTMLButtonElement | null;
-    btn?.addEventListener('click', async () => {
+    const btn = tooltipEl.querySelector(
+      ".lv-tooltip-add",
+    ) as HTMLButtonElement | null;
+    btn?.addEventListener("click", async () => {
       const lower = text.toLowerCase();
-      const type = TECH_WORDS.has(lower) ? 'technical' as const : 'ordinary' as const;
+      const type = TECH_WORDS.has(lower)
+        ? ("technical" as const)
+        : ("ordinary" as const);
       await addWord(text, result.translation, result.partOfSpeech, type);
-      btn.textContent = '✓ 已添加';
+      btn.textContent = "✓ 已添加";
       btn.disabled = true;
-      btn.classList.add('lv-tooltip-add--done');
+      btn.classList.add("lv-tooltip-add--done");
       onWordAdded?.();
       setTimeout(() => hideTooltipImmediate(), 600);
     });
@@ -223,7 +254,7 @@ async function showSelectionTooltip(rect: DOMRect, text: string): Promise<void> 
 
 function positionTooltip(rect: DOMRect): void {
   if (!tooltipEl) return;
-  tooltipEl.style.display = 'block';
+  tooltipEl.style.display = "block";
   const tr = tooltipEl.getBoundingClientRect();
   const gap = 6;
 
@@ -232,7 +263,8 @@ function positionTooltip(rect: DOMRect): void {
   if (top < 0) top = gap;
 
   let left = rect.left + (rect.width - tr.width) / 2;
-  if (left + tr.width > window.innerWidth) left = window.innerWidth - tr.width - gap;
+  if (left + tr.width > window.innerWidth)
+    left = window.innerWidth - tr.width - gap;
   if (left < 0) left = gap;
 
   tooltipEl.style.top = `${top}px`;
@@ -246,15 +278,30 @@ export function hideTooltip(): void {
 
 function hideTooltipImmediate(): void {
   clearHideTimer();
-  if (tooltipEl) tooltipEl.style.display = 'none';
+  if (tooltipEl) tooltipEl.style.display = "none";
 }
 
 export function destroyTooltip(): void {
   clearHideTimer();
-  if (onMouseOver) { document.removeEventListener('mouseover', onMouseOver); onMouseOver = null; }
-  if (onMouseOut) { document.removeEventListener('mouseout', onMouseOut); onMouseOut = null; }
-  if (onMouseUp) { document.removeEventListener('mouseup', onMouseUp); onMouseUp = null; }
-  if (onClickOutside) { document.removeEventListener('mousedown', onClickOutside); onClickOutside = null; }
-  if (tooltipEl) { tooltipEl.remove(); tooltipEl = null; }
+  if (onMouseOver) {
+    document.removeEventListener("mouseover", onMouseOver);
+    onMouseOver = null;
+  }
+  if (onMouseOut) {
+    document.removeEventListener("mouseout", onMouseOut);
+    onMouseOut = null;
+  }
+  if (onMouseUp) {
+    document.removeEventListener("mouseup", onMouseUp);
+    onMouseUp = null;
+  }
+  if (onClickOutside) {
+    document.removeEventListener("mousedown", onClickOutside);
+    onClickOutside = null;
+  }
+  if (tooltipEl) {
+    tooltipEl.remove();
+    tooltipEl = null;
+  }
   onWordAdded = null;
 }

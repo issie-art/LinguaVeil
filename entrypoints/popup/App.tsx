@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
-import { sendModeChange, sendTranslationModeChange } from '../lib/messages';
-import './App.css';
+import { useEffect, useState } from "react";
+import { sendModeChange, sendTranslationModeChange } from "../lib/messages";
+import "./App.css";
 
 interface ModeState {
   learning: boolean;
@@ -8,21 +8,28 @@ interface ModeState {
   translation: boolean;
 }
 
-const MODES_KEY = 'lv_modes';
-const DEFAULT_MODES: ModeState = { learning: true, writing: false, translation: true };
+const MODES_KEY = "lv_modes";
+const DEFAULT_MODES: ModeState = {
+  learning: true,
+  writing: false,
+  translation: true,
+};
 
 function App() {
   const [modes, setModes] = useState<ModeState>(DEFAULT_MODES);
 
   useEffect(() => {
-    browser.storage.local.get(MODES_KEY).then((result) => {
-      const stored = result[MODES_KEY] as Partial<ModeState> | undefined;
-      if (stored) {
-        setModes({ ...DEFAULT_MODES, ...stored });
-      }
-    }).catch((err) => {
-      console.warn('[LinguaVeil] Failed to load mode state:', err);
-    });
+    browser.storage.local
+      .get(MODES_KEY)
+      .then((result) => {
+        const stored = result[MODES_KEY] as Partial<ModeState> | undefined;
+        if (stored) {
+          setModes({ ...DEFAULT_MODES, ...stored });
+        }
+      })
+      .catch((err) => {
+        console.warn("[LinguaVeil] Failed to load mode state:", err);
+      });
   }, []);
 
   const toggleLearning = async () => {
@@ -30,7 +37,11 @@ function App() {
     const updated = { ...modes, learning: next };
     setModes(updated);
     await browser.storage.local.set({ [MODES_KEY]: updated });
-    try { await sendModeChange(next); } catch { /* tab may not exist */ }
+    try {
+      await sendModeChange(next);
+    } catch {
+      /* tab may not exist */
+    }
   };
 
   const toggleTranslation = async () => {
@@ -38,7 +49,11 @@ function App() {
     const updated = { ...modes, translation: next };
     setModes(updated);
     await browser.storage.local.set({ [MODES_KEY]: updated });
-    try { await sendTranslationModeChange(next); } catch { /* tab may not exist */ }
+    try {
+      await sendTranslationModeChange(next);
+    } catch {
+      /* tab may not exist */
+    }
   };
 
   return (
@@ -58,7 +73,11 @@ function App() {
             <div className="mode-desc">划词添加生词，自动标注已收录的生词</div>
           </div>
           <label className="toggle">
-            <input type="checkbox" checked={modes.learning} onChange={toggleLearning} />
+            <input
+              type="checkbox"
+              checked={modes.learning}
+              onChange={toggleLearning}
+            />
             <span className="toggle-slider" />
           </label>
         </div>
@@ -72,7 +91,11 @@ function App() {
             <div className="mode-desc">选中文本即时翻译，支持单词和句子</div>
           </div>
           <label className="toggle">
-            <input type="checkbox" checked={modes.translation} onChange={toggleTranslation} />
+            <input
+              type="checkbox"
+              checked={modes.translation}
+              onChange={toggleTranslation}
+            />
             <span className="toggle-slider" />
           </label>
         </div>
@@ -87,7 +110,7 @@ function App() {
             <div className="mode-desc">辅助英文写作与表达润色</div>
           </div>
           <label className="toggle">
-            <input type="checkbox" checked={modes.writing} disabled/>
+            <input type="checkbox" checked={modes.writing} disabled />
             <span className="toggle-slider" />
           </label>
         </div>

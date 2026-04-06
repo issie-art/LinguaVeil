@@ -3,28 +3,41 @@
  * 基于 browser.storage.local 的生词数据 CRUD
  */
 
-export type { WordEntry } from './messages';
-import type { WordEntry } from './messages';
+export type { WordEntry } from "./messages";
+import type { WordEntry } from "./messages";
 
-const STORAGE_KEY = 'lv_words';
+const STORAGE_KEY = "lv_words";
+
+/** 检查扩展上下文是否仍然有效 */
+function isContextValid(): boolean {
+  try {
+    return !!browser.runtime?.id;
+  } catch {
+    return false;
+  }
+}
 
 /** 从 storage 读取全部生词记录 */
 async function loadAll(): Promise<Record<string, WordEntry>> {
+  if (!isContextValid()) return {};
   try {
     const result = await browser.storage.local.get(STORAGE_KEY);
     return (result[STORAGE_KEY] as Record<string, WordEntry>) ?? {};
   } catch (err) {
-    console.error('[LinguaVeil] Failed to load words from storage:', err);
+    if (String(err).includes('Extension context invalidated')) return {};
+    console.error("[LinguaVeil] Failed to load words from storage:", err);
     return {};
   }
 }
 
 /** 将全部生词记录写入 storage */
 async function saveAll(words: Record<string, WordEntry>): Promise<void> {
+  if (!isContextValid()) return;
   try {
     await browser.storage.local.set({ [STORAGE_KEY]: words });
   } catch (err) {
-    console.error('[LinguaVeil] Failed to save words to storage:', err);
+    if (String(err).includes('Extension context invalidated')) return;
+    console.error("[LinguaVeil] Failed to save words to storage:", err);
   }
 }
 
@@ -32,9 +45,11 @@ async function saveAll(words: Record<string, WordEntry>): Promise<void> {
  * 获取用户的生词本（未掌握的词）
  * 返回 Map<word, type> 用于 scanner 标注
  */
-export async function getVocabWords(): Promise<Map<string, 'ordinary' | 'technical'>> {
+export async function getVocabWords(): Promise<
+  Map<string, "ordinary" | "technical">
+> {
   const words = await loadAll();
-  const vocab = new Map<string, 'ordinary' | 'technical'>();
+  const vocab = new Map<string, "ordinary" | "technical">();
   for (const entry of Object.values(words)) {
     if (!entry.mastered) {
       vocab.set(entry.word.toLowerCase(), entry.type);
@@ -50,7 +65,7 @@ export async function addWord(
   word: string,
   definition: string,
   partOfSpeech: string,
-  type: 'ordinary' | 'technical',
+  type: "ordinary" | "technical",
 ): Promise<void> {
   try {
     const words = await loadAll();
@@ -67,7 +82,7 @@ export async function addWord(
       await saveAll(words);
     }
   } catch (err) {
-    console.error('[LinguaVeil] Failed to add word:', err);
+    console.error("[LinguaVeil] Failed to add word:", err);
   }
 }
 
@@ -83,7 +98,7 @@ export async function markAsMastered(word: string): Promise<void> {
       await saveAll(words);
     }
   } catch (err) {
-    console.error('[LinguaVeil] Failed to mark word as mastered:', err);
+    console.error("[LinguaVeil] Failed to mark word as mastered:", err);
   }
 }
 
@@ -98,9 +113,9 @@ export async function getWord(word: string): Promise<WordEntry | null> {
 /**
  * 按掌握状态查询生词列表
  */
-export async function queryWords(
-  filter: { mastered?: boolean }
-): Promise<WordEntry[]> {
+export async function queryWords(filter: {
+  mastered?: boolean;
+}): Promise<WordEntry[]> {
   const words = await loadAll();
   const entries = Object.values(words);
   if (filter.mastered === undefined) return entries;

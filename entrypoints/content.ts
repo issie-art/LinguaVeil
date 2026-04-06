@@ -1,50 +1,41 @@
-import './content/styles.css';
-import { scanContainer, annotateWords, removeAnnotations } from './content/scanner';
-import { initTooltip, destroyTooltip, setTranslationMode } from './content/tooltip';
-import { startObserving, stopObserving } from './content/observer';
-import { getVocabWords } from './lib/word-store';
-import type { Message } from './lib/messages';
+import "./content/styles.css";
+import {
+  scanContainer,
+  annotateWords,
+  removeAnnotations,
+} from "./content/scanner";
+import {
+  initTooltip,
+  destroyTooltip,
+  setTranslationMode,
+} from "./content/tooltip";
+import { startObserving, stopObserving } from "./content/observer";
+import { getVocabWords } from "./lib/word-store";
+import type { Message } from "./lib/messages";
 
-const MODES_KEY = 'lv_modes';
+const MODES_KEY = "lv_modes";
 
-/**
- * GitHub 页面上的 markdown 内容区域选择器
- * 直接匹配所有 .markdown-body，排除编辑器和表单内的
- */
-const CONTENT_SELECTORS = [
-  '#readme .markdown-body',           // 仓库首页 README
-  '.js-discussion .markdown-body',    // PR / Issue 描述
-  '.comment-body .markdown-body',     // PR / Issue 评论
-  '.blob-wrapper .markdown-body',     // 查看 .md 文件
-  '#wiki-body .markdown-body',        // Wiki 页面
-  // GitHub 新版 UI 可能用的选择器
-  '[data-target="readme-toc.content"] .markdown-body',
-  '.Layout-main .markdown-body',
-  'article.markdown-body',
-  '.entry-content .markdown-body',
-];
+/** 检查扩展上下文是否仍然有效 */
+function isContextValid(): boolean {
+  try {
+    return !!browser.runtime?.id;
+  } catch {
+    return false;
+  }
+}
 
-/** 查找页面上所有匹配的 markdown 内容容器，兜底用所有 .markdown-body */
+/** 返回扫描容器（整个 body） */
 function findContainers(): Element[] {
-  // 先尝试精确选择器
-  const selector = CONTENT_SELECTORS.join(', ');
-  const matched = Array.from(document.querySelectorAll(selector));
-  if (matched.length > 0) return matched;
-
-  // 兜底：取所有 .markdown-body，排除在 textarea/input/form 内的
-  return Array.from(document.querySelectorAll('.markdown-body')).filter(el => {
-    // 排除编辑器内的
-    if (el.closest('textarea, .CodeMirror, .cm-editor')) return false;
-    // 排除太小的（可能是 inline 片段）
-    if (el.textContent && el.textContent.trim().length < 50) return false;
-    return true;
-  });
+  return document.body ? [document.body] : [];
 }
 
 async function isLearningModeOn(): Promise<boolean> {
   try {
     const result = await browser.storage.local.get(MODES_KEY);
-    const modes = (result[MODES_KEY] as { learning: boolean; translation?: boolean }) ?? { learning: true };
+    const modes = (result[MODES_KEY] as {
+      learning: boolean;
+      translation?: boolean;
+    }) ?? { learning: true };
     return modes.learning;
   } catch {
     return true;
@@ -54,7 +45,9 @@ async function isLearningModeOn(): Promise<boolean> {
 async function isTranslationModeOn(): Promise<boolean> {
   try {
     const result = await browser.storage.local.get(MODES_KEY);
-    const modes = (result[MODES_KEY] as { translation?: boolean }) ?? { translation: true };
+    const modes = (result[MODES_KEY] as { translation?: boolean }) ?? {
+      translation: true,
+    };
     return modes.translation ?? true;
   } catch {
     return true;
@@ -64,21 +57,29 @@ async function isTranslationModeOn(): Promise<boolean> {
 /** 扫描并标注所有容器中用户生词本里的词 */
 async function scanAll(): Promise<void> {
   const vocabWords = await getVocabWords();
-  console.log('[LinguaVeil] scanAll: vocabWords size =', vocabWords.size, [...vocabWords.keys()]);
+  console.log("[LinguaVeil] scanAll: vocabWords size =", vocabWords.size, [
+    ...vocabWords.keys(),
+  ]);
   if (vocabWords.size === 0) return;
 
   const containers = findContainers();
-  console.log('[LinguaVeil] scanAll: containers found =', containers.length);
+  console.log("[LinguaVeil] scanAll: containers found =", containers.length);
   // 如果没找到，打印页面上所有 .markdown-body 的父元素，帮助调试
   if (containers.length === 0) {
-    const all = document.querySelectorAll('.markdown-body');
-    console.log('[LinguaVeil] all .markdown-body on page:', all.length,
-      Array.from(all).map(el => el.parentElement?.id || el.parentElement?.className || el.className));
+    const all = document.querySelectorAll(".markdown-body");
+    console.log(
+      "[LinguaVeil] all .markdown-body on page:",
+      all.length,
+      Array.from(all).map(
+        (el) =>
+          el.parentElement?.id || el.parentElement?.className || el.className,
+      ),
+    );
   }
 
   for (const container of containers) {
     const results = scanContainer(container, vocabWords);
-    console.log('[LinguaVeil] scanAll: scan results =', results.length);
+    console.log("[LinguaVeil] scanAll: scan results =", results.length);
     annotateWords(results);
   }
 }
@@ -95,7 +96,7 @@ let scanning = false;
 
 /** 重新扫描（添加生词后 / 内容变化后触发） */
 function rescan(): void {
-  if (scanning) return;
+  if (scanning || !isContextValid()) return;
   scanning = true;
   // 暂停 observer，避免 DOM 修改触发循环
   stopObserving();
@@ -110,16 +111,20 @@ function rescan(): void {
 }
 
 export default defineContentScript({
-  matches: ['https://github.com/*'],
+  matches: ["*://*/*"],
 
   async main() {
     let learningOn = await isLearningModeOn();
     const translationOn = await isTranslationModeOn();
     setTranslationMode(translationOn);
 
+    // 只要学习模式或翻译模式任一开启，就初始化 tooltip 系统
+    if (learningOn || translationOn) {
+      initTooltip(rescan);
+    }
+
     if (learningOn) {
       await scanAll();
-      initTooltip(rescan);
 
       const containers = findContainers();
       if (containers.length > 0) {
@@ -153,12 +158,13 @@ export default defineContentScript({
 
     // 监听 Popup 消息
     browser.runtime.onMessage.addListener((message: Message) => {
-      if (message.type === 'LEARNING_MODE_CHANGED') {
+      if (message.type === "LEARNING_MODE_CHANGED") {
         if (!message.enabled) {
           learningOn = false;
           stopObserving();
           removeAll();
-          destroyTooltip();
+          // 翻译模式还开着就不销毁 tooltip
+          if (!translationOn) destroyTooltip();
         } else {
           learningOn = true;
           removeAll();
@@ -170,8 +176,15 @@ export default defineContentScript({
             }
           });
         }
-      } else if (message.type === 'TRANSLATION_MODE_CHANGED') {
+      } else if (message.type === "TRANSLATION_MODE_CHANGED") {
         setTranslationMode(message.enabled);
+        // 翻译模式开启时确保 tooltip 已初始化
+        if (message.enabled) {
+          initTooltip(rescan);
+        } else if (!learningOn) {
+          // 两个模式都关了才销毁
+          destroyTooltip();
+        }
       }
     });
   },

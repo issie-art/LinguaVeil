@@ -1,16 +1,16 @@
-import { isProtectedNode, extractScannableText } from './code-guard';
+import { isProtectedNode, extractScannableText } from "./code-guard";
 
 /** 英文单词提取正则：连续字母序列，长度 >= 3 */
 const WORD_PATTERN = /[a-zA-Z]{3,}/g;
 
 /** 标注 CSS 类名 */
-const CLASS_WORD = 'lv-word';
-const CLASS_ORDINARY = 'lv-ordinary';
-const CLASS_TECHNICAL = 'lv-technical';
+const CLASS_WORD = "lv-word";
+const CLASS_ORDINARY = "lv-ordinary";
+const CLASS_TECHNICAL = "lv-technical";
 
 export interface ScanResult {
   word: string;
-  type: 'ordinary' | 'technical';
+  type: "ordinary" | "technical";
   node: Text;
   offset: number;
 }
@@ -22,7 +22,7 @@ export interface ScanResult {
  */
 export function scanContainer(
   container: Element,
-  vocabWords: Map<string, 'ordinary' | 'technical'>,
+  vocabWords: Map<string, "ordinary" | "technical">,
 ): ScanResult[] {
   if (vocabWords.size === 0) return [];
 
@@ -33,7 +33,7 @@ export function scanContainer(
   while ((textNode = walker.nextNode() as Text | null)) {
     if (isProtectedNode(textNode)) continue;
 
-    const fullText = textNode.textContent ?? '';
+    const fullText = textNode.textContent ?? "";
     if (!fullText.trim()) continue;
 
     const { segments } = extractScannableText(fullText);
@@ -63,7 +63,6 @@ export function scanContainer(
   return results;
 }
 
-
 /**
  * 对扫描结果执行 DOM 标注。
  * 按逆序处理（从后往前），以保持偏移量的正确性。
@@ -85,14 +84,14 @@ export function annotateWords(results: ScanResult[]): void {
       const { word, type, offset } = result;
       if (!node.parentNode) continue;
 
-      const text = node.textContent ?? '';
+      const text = node.textContent ?? "";
       if (text.slice(offset, offset + word.length) !== word) continue;
 
       const afterNode = node.splitText(offset + word.length);
       const wordNode = node.splitText(offset);
 
-      const span = document.createElement('span');
-      span.className = `${CLASS_WORD} ${type === 'technical' ? CLASS_TECHNICAL : CLASS_ORDINARY}`;
+      const span = document.createElement("span");
+      span.className = `${CLASS_WORD} ${type === "technical" ? CLASS_TECHNICAL : CLASS_ORDINARY}`;
       span.dataset.word = word;
       span.textContent = wordNode.textContent;
 
@@ -108,7 +107,7 @@ export function annotateWords(results: ScanResult[]): void {
 export function removeAnnotations(container: Element): void {
   const spans = container.querySelectorAll(`.${CLASS_WORD}`);
   spans.forEach((span) => {
-    const textNode = document.createTextNode(span.textContent ?? '');
+    const textNode = document.createTextNode(span.textContent ?? "");
     span.parentNode?.replaceChild(textNode, span);
   });
   container.normalize();

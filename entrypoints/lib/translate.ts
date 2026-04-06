@@ -18,38 +18,39 @@ export async function translate(text: string): Promise<TranslateResult> {
     const data = await res.json();
 
     // data[0] 是翻译结果数组
-    const translation = data[0]
-      ?.map((item: any[]) => item[0])
-      ?.filter(Boolean)
-      ?.join('') ?? text;
+    const translation =
+      data[0]
+        ?.map((item: any[]) => item[0])
+        ?.filter(Boolean)
+        ?.join("") ?? text;
 
     // data[1] 是词性信息（仅单词有）
-    let partOfSpeech = '';
+    let partOfSpeech = "";
     if (data[1] && Array.isArray(data[1]) && data[1].length > 0) {
       // data[1][0][0] 是词性，如 "noun", "verb"
-      const pos = data[1][0]?.[0] ?? '';
+      const pos = data[1][0]?.[0] ?? "";
       partOfSpeech = posToAbbr(pos);
     }
 
     return { translation, partOfSpeech };
   } catch (err) {
-    console.warn('[LinguaVeil] Translation failed:', err);
-    return { translation: '翻译失败', partOfSpeech: '' };
+    console.warn("[LinguaVeil] Translation failed:", err);
+    return { translation: "翻译失败", partOfSpeech: "" };
   }
 }
 
 /** 英文词性转缩写 */
 function posToAbbr(pos: string): string {
   const map: Record<string, string> = {
-    noun: 'n.',
-    verb: 'v.',
-    adjective: 'adj.',
-    adverb: 'adv.',
-    pronoun: 'pron.',
-    preposition: 'prep.',
-    conjunction: 'conj.',
-    interjection: 'interj.',
-    exclamation: 'excl.',
+    noun: "n.",
+    verb: "v.",
+    adjective: "adj.",
+    adverb: "adv.",
+    pronoun: "pron.",
+    preposition: "prep.",
+    conjunction: "conj.",
+    interjection: "interj.",
+    exclamation: "excl.",
   };
   return map[pos.toLowerCase()] ?? pos;
 }

@@ -8,25 +8,25 @@ export interface WordEntry {
   word: string;
   definition: string;
   partOfSpeech: string;
-  type: 'ordinary' | 'technical';
+  type: "ordinary" | "technical";
   firstSeen: number;
   mastered: boolean;
 }
 
 /** 消息联合类型 */
 export type Message =
-  | { type: 'LEARNING_MODE_CHANGED'; enabled: boolean }
-  | { type: 'TRANSLATION_MODE_CHANGED'; enabled: boolean }
-  | { type: 'MARK_MASTERED'; word: string }
-  | { type: 'GET_WORD_DATA'; word: string }
-  | { type: 'WORD_DATA_RESPONSE'; data: WordEntry | null };
+  | { type: "LEARNING_MODE_CHANGED"; enabled: boolean }
+  | { type: "TRANSLATION_MODE_CHANGED"; enabled: boolean }
+  | { type: "MARK_MASTERED"; word: string }
+  | { type: "GET_WORD_DATA"; word: string }
+  | { type: "WORD_DATA_RESPONSE"; data: WordEntry | null };
 
 /**
  * Popup -> Background: 发送学习模式变更消息
  */
 export async function sendModeChange(enabled: boolean): Promise<void> {
   await browser.runtime.sendMessage({
-    type: 'LEARNING_MODE_CHANGED',
+    type: "LEARNING_MODE_CHANGED",
     enabled,
   } satisfies Message);
 }
@@ -34,9 +34,11 @@ export async function sendModeChange(enabled: boolean): Promise<void> {
 /**
  * Popup -> Background: 发送翻译模式变更消息
  */
-export async function sendTranslationModeChange(enabled: boolean): Promise<void> {
+export async function sendTranslationModeChange(
+  enabled: boolean,
+): Promise<void> {
   await browser.runtime.sendMessage({
-    type: 'TRANSLATION_MODE_CHANGED',
+    type: "TRANSLATION_MODE_CHANGED",
     enabled,
   } satisfies Message);
 }

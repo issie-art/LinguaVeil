@@ -1,5 +1,5 @@
 /** 需要跳过的标签名集合 */
-const SKIP_TAGS = new Set(['CODE', 'PRE', 'SCRIPT', 'STYLE']);
+const SKIP_TAGS = new Set(["CODE", "PRE", "SCRIPT", "STYLE", "TEXTAREA", "INPUT", "NOSCRIPT", "SVG"]);
 
 /** LaTeX 公式正则：匹配 $$...$$ 和 $...$ */
 const LATEX_PATTERN = /\$\$[\s\S]+?\$\$|\$[^$\n]+?\$/g;
@@ -11,11 +11,11 @@ const LATEX_PATTERN = /\$\$[\s\S]+?\$\$|\$[^$\n]+?\$/g;
 export function isProtectedNode(node: Node): boolean {
   let current: Node | null = node;
   while (current) {
-    if (
-      current.nodeType === Node.ELEMENT_NODE &&
-      SKIP_TAGS.has((current as Element).tagName)
-    ) {
-      return true;
+    if (current.nodeType === Node.ELEMENT_NODE) {
+      const el = current as Element;
+      if (SKIP_TAGS.has(el.tagName)) return true;
+      // 跳过可编辑区域
+      if (el.getAttribute?.('contenteditable') === 'true') return true;
     }
     current = current.parentNode;
   }

@@ -8,25 +8,25 @@
 
 ### 已实现
 
-| 功能 | 描述 | 入口 |
-|------|------|------|
-| 划词翻译 | 选中英文文本（单词/句子），弹出浮窗显示 Google Translate 中文翻译和词性 | 在 GitHub `.markdown-body` 区域内选中文本 |
-| 添加生词 | 划词翻译浮窗中点击「+ 添加生词」，将单词存入本地生词本 | 划词浮窗内按钮 |
-| 生词自动标注 | 生词本中的单词在页面上自动加下划线（普通词灰色虚线，技术词蓝色实线） | 页面加载时自动执行 |
-| Hover 释义 | 鼠标悬停已标注生词，显示中文释义 + 词性 + 「已掌握」按钮 | 鼠标悬停 |
-| 标记已掌握 | 点击「已掌握」后该词从标注中移除，不再标注 | Hover 浮窗内按钮 |
-| 代码保护 | 扫描时跳过 `<code>` `<pre>` `<script>` `<style>` 及 LaTeX 公式 | 自动 |
-| 动态内容适配 | GitHub PJAX/Turbo 导航后自动重新扫描标注 | MutationObserver |
-| 模式开关 | Popup 面板控制学习模式和划词翻译的独立开关 | 浏览器工具栏图标 |
+| 功能         | 描述                                                                    | 入口                                      |
+| ------------ | ----------------------------------------------------------------------- | ----------------------------------------- |
+| 划词翻译     | 选中英文文本（单词/句子），弹出浮窗显示 Google Translate 中文翻译和词性 | 在 GitHub `.markdown-body` 区域内选中文本 |
+| 添加生词     | 划词翻译浮窗中点击「+ 添加生词」，将单词存入本地生词本                  | 划词浮窗内按钮                            |
+| 生词自动标注 | 生词本中的单词在页面上自动加下划线（普通词灰色虚线，技术词蓝色实线）    | 页面加载时自动执行                        |
+| Hover 释义   | 鼠标悬停已标注生词，显示中文释义 + 词性 + 「已掌握」按钮                | 鼠标悬停                                  |
+| 标记已掌握   | 点击「已掌握」后该词从标注中移除，不再标注                              | Hover 浮窗内按钮                          |
+| 代码保护     | 扫描时跳过 `<code>` `<pre>` `<script>` `<style>` 及 LaTeX 公式          | 自动                                      |
+| 动态内容适配 | GitHub PJAX/Turbo 导航后自动重新扫描标注                                | MutationObserver                          |
+| 模式开关     | Popup 面板控制学习模式和划词翻译的独立开关                              | 浏览器工具栏图标                          |
 
 ### 未实现（规划中）
 
-| 功能 | 状态 |
-|------|------|
-| 写作模式（表达润色） | Popup 中显示为禁用，标注「即将推出」 |
-| 生词本管理页面 | 未开发 |
-| 间隔重复复习（Spaced Repetition） | 未开发 |
-| 多站点支持（Reddit / Stack Overflow / 论文） | 未开发 |
+| 功能                                         | 状态                                 |
+| -------------------------------------------- | ------------------------------------ |
+| 写作模式（表达润色）                         | Popup 中显示为禁用，标注「即将推出」 |
+| 生词本管理页面                               | 未开发                               |
+| 间隔重复复习（Spaced Repetition）            | 未开发                               |
+| 多站点支持（Reddit / Stack Overflow / 论文） | 未开发                               |
 
 ## 架构概览
 
@@ -99,42 +99,45 @@
 
 ## 模块说明
 
-| 模块 | 文件 | 职责 |
-|------|------|------|
-| Content Script 入口 | `entrypoints/content.ts` | 生命周期管理、容器发现、扫描调度、消息监听 |
-| Scanner | `entrypoints/content/scanner.ts` | TreeWalker 遍历文本节点、匹配生词本、DOM 标注/移除 |
-| Code Guard | `entrypoints/content/code-guard.ts` | 判断节点是否在代码保护区域、LaTeX 公式过滤 |
-| Tooltip | `entrypoints/content/tooltip.ts` | 划词翻译浮窗、Hover 释义浮窗、添加生词/已掌握交互 |
-| Observer | `entrypoints/content/observer.ts` | MutationObserver 监听内容变化，1s 防抖后触发重扫 |
-| Word Store | `entrypoints/lib/word-store.ts` | 生词本 CRUD（chrome.storage.local） |
-| Translate | `entrypoints/lib/translate.ts` | Google Translate 公开 API 封装 |
-| Messages | `entrypoints/lib/messages.ts` | 消息类型定义、Popup↔Background↔Content 通信函数 |
-| Tech Words | `entrypoints/lib/tech-words.ts` | 预定义技术词汇表（~200 词），用于生词分级 |
-| Background | `entrypoints/background.ts` | 消息中转，转发失败静默处理 |
-| Popup | `entrypoints/popup/App.tsx` | React 设置面板，学习模式/划词翻译/写作模式开关 |
+| 模块                | 文件                                | 职责                                               |
+| ------------------- | ----------------------------------- | -------------------------------------------------- |
+| Content Script 入口 | `entrypoints/content.ts`            | 生命周期管理、容器发现、扫描调度、消息监听         |
+| Scanner             | `entrypoints/content/scanner.ts`    | TreeWalker 遍历文本节点、匹配生词本、DOM 标注/移除 |
+| Code Guard          | `entrypoints/content/code-guard.ts` | 判断节点是否在代码保护区域、LaTeX 公式过滤         |
+| Tooltip             | `entrypoints/content/tooltip.ts`    | 划词翻译浮窗、Hover 释义浮窗、添加生词/已掌握交互  |
+| Observer            | `entrypoints/content/observer.ts`   | MutationObserver 监听内容变化，1s 防抖后触发重扫   |
+| Word Store          | `entrypoints/lib/word-store.ts`     | 生词本 CRUD（chrome.storage.local）                |
+| Translate           | `entrypoints/lib/translate.ts`      | Google Translate 公开 API 封装                     |
+| Messages            | `entrypoints/lib/messages.ts`       | 消息类型定义、Popup↔Background↔Content 通信函数    |
+| Tech Words          | `entrypoints/lib/tech-words.ts`     | 预定义技术词汇表（~200 词），用于生词分级          |
+| Background          | `entrypoints/background.ts`         | 消息中转，转发失败静默处理                         |
+| Popup               | `entrypoints/popup/App.tsx`         | React 设置面板，学习模式/划词翻译/写作模式开关     |
 
 ## 存储结构
 
 ### lv_words（生词本）
 
 ```typescript
-Record<string, {
-  word: string;           // 单词原文（小写）
-  definition: string;     // 中文释义
-  partOfSpeech: string;   // 词性（n. / v. / adj.）
-  type: 'ordinary' | 'technical';  // 分级
-  firstSeen: number;      // 首次添加时间戳
-  mastered: boolean;      // 是否已掌握
-}>
+Record<
+  string,
+  {
+    word: string; // 单词原文（小写）
+    definition: string; // 中文释义
+    partOfSpeech: string; // 词性（n. / v. / adj.）
+    type: "ordinary" | "technical"; // 分级
+    firstSeen: number; // 首次添加时间戳
+    mastered: boolean; // 是否已掌握
+  }
+>;
 ```
 
 ### lv_modes（模式状态）
 
 ```typescript
 {
-  learning: boolean;      // 学习模式（默认 true）
-  writing: boolean;       // 写作模式（默认 false，v0.1.0 未实现）
-  translation: boolean;   // 划词翻译（默认 true）
+  learning: boolean; // 学习模式（默认 true）
+  writing: boolean; // 写作模式（默认 false，v0.1.0 未实现）
+  translation: boolean; // 划词翻译（默认 true）
 }
 ```
 
@@ -142,26 +145,26 @@ Record<string, {
 
 Content Script 匹配 `https://github.com/*`，在以下区域内激活扫描和划词：
 
-| 选择器 | 场景 |
-|--------|------|
-| `#readme .markdown-body` | 仓库首页 README |
+| 选择器                          | 场景            |
+| ------------------------------- | --------------- |
+| `#readme .markdown-body`        | 仓库首页 README |
 | `.js-discussion .markdown-body` | PR / Issue 描述 |
-| `.comment-body .markdown-body` | PR / Issue 评论 |
-| `.blob-wrapper .markdown-body` | 浏览 .md 文件 |
-| `#wiki-body .markdown-body` | Wiki 页面 |
-| `article.markdown-body` | GitHub 新版 UI |
-| 兜底：所有 `.markdown-body` | 以上都不匹配时 |
+| `.comment-body .markdown-body`  | PR / Issue 评论 |
+| `.blob-wrapper .markdown-body`  | 浏览 .md 文件   |
+| `#wiki-body .markdown-body`     | Wiki 页面       |
+| `article.markdown-body`         | GitHub 新版 UI  |
+| 兜底：所有 `.markdown-body`     | 以上都不匹配时  |
 
 ## 技术栈
 
-| 技术 | 用途 |
-|------|------|
-| WXT 0.20 | 浏览器扩展开发框架 |
-| React 19 | Popup 面板 UI |
-| TypeScript 5.9 | 类型安全 |
-| Chrome Extension MV3 | 扩展规范 |
+| 技术                 | 用途                               |
+| -------------------- | ---------------------------------- |
+| WXT 0.20             | 浏览器扩展开发框架                 |
+| React 19             | Popup 面板 UI                      |
+| TypeScript 5.9       | 类型安全                           |
+| Chrome Extension MV3 | 扩展规范                           |
 | Google Translate API | 划词翻译（免费公开接口，无需 Key） |
-| chrome.storage.local | 生词本 + 模式状态持久化 |
+| chrome.storage.local | 生词本 + 模式状态持久化            |
 
 ## 已知限制
 

@@ -5,6 +5,7 @@
 LinguaVeil v0.1.0 是一个基于 WXT + React + TypeScript 的 Chrome 浏览器扩展 MVP，聚焦于 GitHub 页面上的英文生词识别与标注。扩展采用浏览器扩展的三层架构（Content Script / Popup / Background），通过 Content Script 注入 GitHub 页面，在 `#readme .markdown-body` 区域内扫描英文文本，识别生词并以下划线样式标注，同时提供 hover 释义浮窗。Popup 面板提供学习模式开关控制，Background Service 负责消息中转和存储管理。
 
 核心设计目标：
+
 - 仅在 GitHub 页面激活，最小化对用户浏览体验的干扰
 - 保护代码区域（`<code>`, `<pre>`, `<script>`, `<style>`, LaTeX）不被标注
 - 区分普通生词（灰色虚线）和技术生词（蓝色实线）
@@ -47,15 +48,15 @@ graph TB
 
 ### 模块职责
 
-| 模块 | 运行环境 | 职责 |
-|------|---------|------|
-| Content_Script | GitHub 页面 | 入口初始化、生词扫描调度、DOM 标注、事件监听 |
-| Word_Scanner | GitHub 页面 | 遍历 DOM 文本节点、提取英文单词、匹配生词库 |
-| Code_Guard | GitHub 页面 | 判断 DOM 节点是否属于代码保护区域 |
-| Tooltip_Widget | GitHub 页面 | 渲染 hover 释义浮窗、管理浮窗定位和生命周期 |
-| Popup_Panel | 扩展 Popup | React 设置面板、模式开关、状态持久化 |
-| Background_Service | Service Worker | 消息转发、错误处理 |
-| Word_Store | 共享（通过 chrome.storage） | 生词数据 CRUD、已掌握词汇管理 |
+| 模块               | 运行环境                    | 职责                                         |
+| ------------------ | --------------------------- | -------------------------------------------- |
+| Content_Script     | GitHub 页面                 | 入口初始化、生词扫描调度、DOM 标注、事件监听 |
+| Word_Scanner       | GitHub 页面                 | 遍历 DOM 文本节点、提取英文单词、匹配生词库  |
+| Code_Guard         | GitHub 页面                 | 判断 DOM 节点是否属于代码保护区域            |
+| Tooltip_Widget     | GitHub 页面                 | 渲染 hover 释义浮窗、管理浮窗定位和生命周期  |
+| Popup_Panel        | 扩展 Popup                  | React 设置面板、模式开关、状态持久化         |
+| Background_Service | Service Worker              | 消息转发、错误处理                           |
+| Word_Store         | 共享（通过 chrome.storage） | 生词数据 CRUD、已掌握词汇管理                |
 
 ### 文件结构
 
@@ -79,7 +80,6 @@ entrypoints/
     └── tech-words.ts           # 预定义技术词汇表
 ```
 
-
 ## 组件与接口
 
 ### 1. Code_Guard 模块
@@ -88,7 +88,7 @@ entrypoints/
 // entrypoints/content/code-guard.ts
 
 /** 需要跳过的标签名集合 */
-const SKIP_TAGS = new Set(['CODE', 'PRE', 'SCRIPT', 'STYLE']);
+const SKIP_TAGS = new Set(["CODE", "PRE", "SCRIPT", "STYLE"]);
 
 /** LaTeX 公式正则：匹配 $...$ 和 $$...$$ */
 const LATEX_PATTERN = /\$\$[\s\S]+?\$\$|\$[^$\n]+?\$/g;
@@ -122,7 +122,7 @@ const HAS_DIGIT = /\d/;
 
 export interface ScanResult {
   word: string;
-  type: 'ordinary' | 'technical';
+  type: "ordinary" | "technical";
   node: Text;
   offset: number;
 }
@@ -137,7 +137,7 @@ export interface ScanResult {
 export function scanContainer(
   container: Element,
   masteredWords: Set<string>,
-  techWords: Set<string>
+  techWords: Set<string>,
 ): ScanResult[];
 
 /**
@@ -161,7 +161,7 @@ export interface TooltipData {
   word: string;
   definition: string;
   partOfSpeech: string;
-  type: 'ordinary' | 'technical';
+  type: "ordinary" | "technical";
 }
 
 /**
@@ -199,8 +199,8 @@ export interface WordEntry {
   word: string;
   definition: string;
   partOfSpeech: string;
-  type: 'ordinary' | 'technical';
-  firstSeen: number;       // Unix timestamp
+  type: "ordinary" | "technical";
+  firstSeen: number; // Unix timestamp
   mastered: boolean;
 }
 
@@ -222,9 +222,9 @@ export async function saveWord(entry: WordEntry): Promise<void>;
 /**
  * 按掌握状态查询生词列表
  */
-export async function queryWords(
-  filter: { mastered?: boolean }
-): Promise<WordEntry[]>;
+export async function queryWords(filter: {
+  mastered?: boolean;
+}): Promise<WordEntry[]>;
 ```
 
 ### 5. 消息通信接口
@@ -234,10 +234,10 @@ export async function queryWords(
 
 /** 消息类型定义 */
 export type Message =
-  | { type: 'LEARNING_MODE_CHANGED'; enabled: boolean }
-  | { type: 'MARK_MASTERED'; word: string }
-  | { type: 'GET_WORD_DATA'; word: string }
-  | { type: 'WORD_DATA_RESPONSE'; data: WordEntry | null };
+  | { type: "LEARNING_MODE_CHANGED"; enabled: boolean }
+  | { type: "MARK_MASTERED"; word: string }
+  | { type: "GET_WORD_DATA"; word: string }
+  | { type: "WORD_DATA_RESPONSE"; data: WordEntry | null };
 
 /**
  * Popup -> Background: 发送学习模式变更
@@ -260,9 +260,7 @@ export function forwardToActiveTab(message: Message): Promise<void>;
  * - 监听 childList 和 subtree 变化
  * - 500ms 防抖后触发回调
  */
-export function startObserving(
-  onContentChange: () => void
-): void;
+export function startObserving(onContentChange: () => void): void;
 
 /**
  * 停止监听并清理资源
@@ -277,7 +275,7 @@ export function stopObserving(): void;
 
 interface ModeState {
   learning: boolean;
-  writing: boolean;    // v0.1.0 禁用
+  writing: boolean; // v0.1.0 禁用
   translation: boolean; // v0.1.0 禁用
 }
 
@@ -289,4 +287,3 @@ interface ModeState {
  * - 写作/翻译模式显示为禁用 + "即将推出"
  */
 ```
-

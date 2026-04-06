@@ -133,4 +133,3 @@ LinguaVeil v0.1.0 是面向工程师群体的英语/技术学习助手浏览器�
 3. WHEN MutationObserver 检测到目标容器内容变化时，THE Content_Script SHALL 在 500 毫秒的防抖延迟后重新执行生词扫描
 4. WHEN 页面导航导致 `#readme .markdown-body` 容器被移除时，THE Content_Script SHALL 停止当前的 MutationObserver 监听
 5. WHEN 页面导航导致新的 `#readme .markdown-body` 容器出现时，THE Content_Script SHALL 对新容器启动 MutationObserver 监听并执行生词扫描
-
