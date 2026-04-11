@@ -7,6 +7,7 @@ import { getCurrentTheme } from "./theme-detector";
 
 let tocPanel: HTMLDivElement | null = null;
 let tocToggle: HTMLButtonElement | null = null;
+let tocHost: HTMLDivElement | null = null; // Shadow DOM 宿主元素
 let tocItems: TocItem[] = [];
 let scrollListener: (() => void) | null = null;
 let currentHighlightId: string | null = null;
@@ -80,8 +81,18 @@ export async function showBreadcrumb(show: boolean): Promise<void> {
   // 隐藏面包屑时，同时收起目录面板
   if (!show && tocPanel) {
     isExpanded = false;
-    tocPanel.style.display = "none";
+    tocPanel.classList.remove("lv-toc-visible");
   }
+}
+
+/** 获取挂载容器（优先使用 GitHub 的 portal root） */
+function getMountContainer(): HTMLElement {
+  // 优先挂载到 GitHub 的 primer portal root，避免样式干扰
+  const primerRoot = document.getElementById('__primerPortalRoot__');
+  if (primerRoot) return primerRoot;
+  
+  // 其次使用 body
+  return document.body;
 }
 
 /** 创建切换按钮（面包屑） */
@@ -101,19 +112,45 @@ function createToggleButton(): void {
   tocToggle.addEventListener("click", () => {
     isExpanded = !isExpanded;
     if (tocPanel) {
-      tocPanel.style.display = isExpanded ? "flex" : "none";
+      tocPanel.classList.toggle("lv-toc-visible", isExpanded);
     }
   });
   
-  document.body.appendChild(tocToggle);
+  getMountContainer().appendChild(tocToggle);
 }
 
 /** 创建目录面板 */
 function createTocPanel(): void {
+  // 创建宿主元素
+  tocHost = document.createElement("div");
+  tocHost.className = "lv-toc-host";
+  tocHost.style.cssText = `
+    position: fixed;
+    right: 70px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2147483647;
+    width: 260px;
+    max-height: 70vh;
+    margin: 0;
+    padding: 0;
+    border: none;
+    background: transparent;
+    pointer-events: none;
+  `;
+  
+  // 使用 Shadow DOM 隔离样式
+  const shadow = tocHost.attachShadow({ mode: 'open' });
+  
+  // 创建面板内容
   tocPanel = document.createElement("div");
   tocPanel.className = "lv-toc-panel";
   tocPanel.dataset.lvTheme = getCurrentTheme();
-  tocPanel.style.display = "none"; // 默认隐藏面板
+  
+  // 注入样式到 Shadow DOM
+  const style = document.createElement("style");
+  style.textContent = getTocStyles();
+  shadow.appendChild(style);
   
   // 头部
   const header = document.createElement("div");
@@ -123,9 +160,12 @@ function createTocPanel(): void {
     <button class="lv-toc-close" title="关闭">×</button>
   `;
   
-  // 关闭按钮
+  // 关闭按钮 - 只收起面板，不销毁组件
   const closeBtn = header.querySelector(".lv-toc-close") as HTMLButtonElement;
-  closeBtn.addEventListener("click", destroyTocWidget);
+  closeBtn.addEventListener("click", () => {
+    isExpanded = false;
+    tocPanel!.classList.remove("lv-toc-visible");
+  });
   
   // 内容区
   const content = document.createElement("div");
@@ -154,7 +194,206 @@ function createTocPanel(): void {
   
   tocPanel.appendChild(header);
   tocPanel.appendChild(content);
-  document.body.appendChild(tocPanel);
+  shadow.appendChild(tocPanel);
+  
+  // 挂载到 body（Shadow DOM 内部样式已隔离）
+  document.body.appendChild(tocHost);
+}
+
+/** 获取目录样式（用于 Shadow DOM） */
+function getTocStyles(): string {
+  return `
+    :host {
+      all: initial;
+    }
+    
+    .lv-toc-panel {
+      width: 100%;
+      /* 使用固定最大高度 */
+      max-height: 500px;
+      display: flex;
+      flex-direction: column;
+      background: #1f2937;
+      border: 1px solid #374151;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 13px;
+      overflow: hidden;
+      visibility: hidden;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease, visibility 0.2s ease;
+    }
+    
+    .lv-toc-panel[data-lv-theme="light"] {
+      background: #ffffff;
+      border-color: #e2e8f0;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+    
+    .lv-toc-panel.lv-toc-visible {
+      visibility: visible;
+      opacity: 1;
+      pointer-events: auto;
+    }
+    
+    .lv-toc-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      border-bottom: 1px solid #374151;
+      flex-shrink: 0;
+    }
+    
+    .lv-toc-panel[data-lv-theme="light"] .lv-toc-header {
+      border-bottom-color: #e2e8f0;
+    }
+    
+    .lv-toc-title {
+      font-weight: 600;
+      font-size: 14px;
+      color: #f3f4f6;
+    }
+    
+    .lv-toc-panel[data-lv-theme="light"] .lv-toc-title {
+      color: #1f2937;
+    }
+    
+    .lv-toc-close {
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      line-height: 1;
+      color: #9ca3af;
+      background: transparent;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    
+    .lv-toc-panel[data-lv-theme="light"] .lv-toc-close {
+      color: #64748b;
+    }
+    
+    .lv-toc-close:hover {
+      color: #f3f4f6;
+      background: #374151;
+    }
+    
+    .lv-toc-panel[data-lv-theme="light"] .lv-toc-close:hover {
+      color: #1f2937;
+      background: #f1f5f9;
+    }
+    
+    .lv-toc-content {
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 8px 0;
+      scrollbar-width: thin;
+      scrollbar-color: #374151 transparent;
+      flex: 1 1 auto;
+      min-height: 0;
+      /* 使用固定高度而不是 vh，避免 Shadow DOM 中 viewport 计算问题 */
+      max-height: 400px;
+    }
+    
+    .lv-toc-panel[data-lv-theme="light"] .lv-toc-content {
+      scrollbar-color: #e2e8f0 transparent;
+    }
+    
+    .lv-toc-content::-webkit-scrollbar {
+      width: 6px;
+    }
+    
+    .lv-toc-content::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    
+    .lv-toc-content::-webkit-scrollbar-thumb {
+      background: #374151;
+      border-radius: 3px;
+    }
+    
+    .lv-toc-panel[data-lv-theme="light"] .lv-toc-content::-webkit-scrollbar-thumb {
+      background: #e2e8f0;
+    }
+    
+    .lv-toc-item {
+      display: block;
+      padding: 6px 16px;
+      color: #9ca3af;
+      text-decoration: none;
+      border-left: 2px solid transparent;
+      transition: all 0.15s;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    
+    .lv-toc-panel[data-lv-theme="light"] .lv-toc-item {
+      color: #64748b;
+    }
+    
+    .lv-toc-item:hover {
+      color: #f3f4f6;
+      background: #374151;
+    }
+    
+    .lv-toc-panel[data-lv-theme="light"] .lv-toc-item:hover {
+      color: #1f2937;
+      background: #f1f5f9;
+    }
+    
+    .lv-toc-item.lv-toc-active {
+      color: #3b82f6;
+      background: rgba(59, 130, 246, 0.15);
+      border-left-color: #3b82f6;
+      font-weight: 500;
+    }
+    
+    .lv-toc-panel[data-lv-theme="light"] .lv-toc-item.lv-toc-active {
+      color: #2563eb;
+      background: rgba(37, 99, 235, 0.1);
+      border-left-color: #2563eb;
+    }
+    
+    .lv-toc-item[data-level="1"] {
+      font-weight: 600;
+      color: #f3f4f6;
+    }
+    
+    .lv-toc-panel[data-lv-theme="light"] .lv-toc-item[data-level="1"] {
+      color: #1f2937;
+    }
+    
+    .lv-toc-item[data-level="2"] {
+      padding-left: 20px;
+    }
+    
+    .lv-toc-item[data-level="3"] {
+      padding-left: 28px;
+      font-size: 12px;
+    }
+    
+    .lv-toc-item[data-level="4"] {
+      padding-left: 36px;
+      font-size: 12px;
+    }
+    
+    .lv-toc-item[data-level="5"],
+    .lv-toc-item[data-level="6"] {
+      padding-left: 44px;
+      font-size: 11px;
+    }
+  `;
 }
 
 /** 绑定滚动同步 */
@@ -193,7 +432,9 @@ export function destroyTocWidget(): void {
   tocToggle?.remove();
   tocToggle = null;
   
-  tocPanel?.remove();
+  // 移除 Shadow DOM 宿主元素（包含面板）
+  tocHost?.remove();
+  tocHost = null;
   tocPanel = null;
   
   tocItems = [];
@@ -216,6 +457,6 @@ export function toggleTocPanel(): void {
   } else {
     // 已初始化，切换显示状态
     isExpanded = !isExpanded;
-    (tocPanel as HTMLDivElement).style.display = isExpanded ? "flex" : "none";
+    tocPanel.classList.toggle("lv-toc-visible", isExpanded);
   }
 }
