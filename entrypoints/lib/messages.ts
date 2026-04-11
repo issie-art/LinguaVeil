@@ -3,7 +3,9 @@
  * 处理 Popup、Background、Content Script 之间的消息传递
  */
 
-/** 生词条目接口（与 word-store.ts 中的 WordEntry 保持一致） */
+import type { FeatureFlags } from "./mode-manager";
+
+/** 生词条目接口 */
 export interface WordEntry {
   word: string;
   definition: string;
@@ -13,33 +15,35 @@ export interface WordEntry {
   mastered: boolean;
 }
 
+/** 抽认卡条目接口 */
+export interface FlashcardEntry {
+  id: string;
+  front: string;
+  back: string;
+  topic: string;
+  context: string;
+  sourceUrl: string;
+  langFront: "en" | "zh";
+  langBack: "en" | "zh";
+  createdAt: number;
+  reviewCount: number;
+  lastReviewed: number | null;
+}
+
 /** 消息联合类型 */
 export type Message =
-  | { type: "LEARNING_MODE_CHANGED"; enabled: boolean }
-  | { type: "TRANSLATION_MODE_CHANGED"; enabled: boolean }
+  | { type: "FLAGS_CHANGED"; flags: FeatureFlags }
   | { type: "MARK_MASTERED"; word: string }
   | { type: "GET_WORD_DATA"; word: string }
   | { type: "WORD_DATA_RESPONSE"; data: WordEntry | null };
 
 /**
- * Popup -> Background: 发送学习模式变更消息
+ * Popup -> Background: 发送能力开关变更消息
  */
-export async function sendModeChange(enabled: boolean): Promise<void> {
+export async function sendFlagsChange(flags: FeatureFlags): Promise<void> {
   await browser.runtime.sendMessage({
-    type: "LEARNING_MODE_CHANGED",
-    enabled,
-  } satisfies Message);
-}
-
-/**
- * Popup -> Background: 发送翻译模式变更消息
- */
-export async function sendTranslationModeChange(
-  enabled: boolean,
-): Promise<void> {
-  await browser.runtime.sendMessage({
-    type: "TRANSLATION_MODE_CHANGED",
-    enabled,
+    type: "FLAGS_CHANGED",
+    flags,
   } satisfies Message);
 }
 

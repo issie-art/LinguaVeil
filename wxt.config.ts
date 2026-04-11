@@ -4,6 +4,13 @@ import { defineConfig } from "wxt";
 export default defineConfig({
   modules: ["@wxt-dev/module-react"],
   manifest: {
-    permissions: ["storage"],
+    name: "LinguaVeil",
+    permissions: ["storage", "sidePanel"],
+    host_permissions: [
+      "https://translate.googleapis.com/*"
+    ],
+    side_panel: {
+      default_path: "flashcards.html",
+    },
   },
 });

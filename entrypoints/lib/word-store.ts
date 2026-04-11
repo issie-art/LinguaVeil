@@ -103,6 +103,18 @@ export async function markAsMastered(word: string): Promise<void> {
 }
 
 /**
+ * 将已掌握的单词恢复到生词本（mastered → false）
+ */
+export async function unmaster(word: string): Promise<void> {
+  const words = await loadAll();
+  const key = word.toLowerCase();
+  if (words[key]) {
+    words[key].mastered = false;
+    await saveAll(words);
+  }
+}
+
+/**
  * 查询生词条目
  */
 export async function getWord(word: string): Promise<WordEntry | null> {

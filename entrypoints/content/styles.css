@@ -1,8 +1,58 @@
 /* ===== LinguaVeil — Injected Content Styles ===== */
 
+/* ===== Theme Variables ===== */
+
+/* Dark theme (default) */
+[data-lv-theme="dark"] .lv-tooltip {
+  --lv-bg: #1f2937;
+  --lv-fg: #f3f4f6;
+  --lv-fg-title: #ffffff;
+  --lv-muted: #9ca3af;
+  --lv-border: #374151;
+  --lv-accent: #3b82f6;
+  --lv-accent-hover: #2563eb;
+  --lv-success: #10b981;
+  --lv-success-hover: #059669;
+  --lv-done: #6b7280;
+  --lv-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  --lv-tag-bg: #374151;
+  --lv-input-bg: #374151;
+  --lv-input-border: #4b5563;
+  --lv-divider: #374151;
+}
+
+/* Light theme */
+[data-lv-theme="light"] .lv-tooltip {
+  --lv-bg: #ffffff;
+  --lv-fg: #1f2937;
+  --lv-fg-title: #0f172a;
+  --lv-muted: #64748b;
+  --lv-border: #e2e8f0;
+  --lv-accent: #2563eb;
+  --lv-accent-hover: #1d4ed8;
+  --lv-success: #059669;
+  --lv-success-hover: #047857;
+  --lv-done: #94a3b8;
+  --lv-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  --lv-tag-bg: #f1f5f9;
+  --lv-input-bg: #f8fafc;
+  --lv-input-border: #d1d5db;
+  --lv-divider: #e2e8f0;
+}
+
+/* Annotation underline theme variables */
+[data-lv-theme="dark"] {
+  --lv-ordinary-underline: #aaa;
+  --lv-technical-underline: #3b82f6;
+}
+
+[data-lv-theme="light"] {
+  --lv-ordinary-underline: #78716c;
+  --lv-technical-underline: #1d4ed8;
+}
+
 /*
  * Word annotation spans
- * Validates: Requirements 4.1, 4.2, 4.3
  */
 .lv-word {
   display: inline;
@@ -13,32 +63,31 @@
   padding: 0;
 }
 
-/* Ordinary word: gray dashed underline */
+/* Ordinary word: dashed underline */
 .lv-ordinary {
-  border-bottom: 1px dashed #aaa;
+  border-bottom: 1px dashed var(--lv-ordinary-underline, #aaa);
   cursor: pointer;
 }
 
-/* Technical word: blue solid underline */
+/* Technical word: solid underline */
 .lv-technical {
-  border-bottom: 1px solid #3b82f6;
+  border-bottom: 1px solid var(--lv-technical-underline, #3b82f6);
   cursor: pointer;
 }
 
 /*
  * Tooltip floating panel
- * Validates: Requirements 5.1, 5.2, 5.3, 5.5, 5.6
  */
 .lv-tooltip {
   display: none;
   position: fixed;
   z-index: 2147483647;
-  background: #1f2937;
-  color: #f3f4f6;
+  background: var(--lv-bg, #1f2937);
+  color: var(--lv-fg, #f3f4f6);
   border-radius: 8px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--lv-shadow, 0 4px 16px rgba(0, 0, 0, 0.3));
   padding: 12px 14px;
-  max-width: 300px;
+  max-width: 320px;
   font-size: 13px;
   line-height: 1.5;
   font-family:
@@ -51,15 +100,15 @@
   font-size: 15px;
   font-weight: 600;
   margin-bottom: 4px;
-  color: #fff;
+  color: var(--lv-fg-title, #fff);
 }
 
 /* Part of speech tag */
 .lv-tooltip-pos {
   display: inline-block;
   font-size: 11px;
-  color: #9ca3af;
-  background: #374151;
+  color: var(--lv-muted, #9ca3af);
+  background: var(--lv-tag-bg, #374151);
   border-radius: 4px;
   padding: 1px 6px;
   margin-left: 6px;
@@ -69,8 +118,29 @@
 /* Definition text */
 .lv-tooltip-def {
   margin-top: 6px;
-  color: #d1d5db;
+  color: var(--lv-fg, #f3f4f6);
   font-size: 13px;
+}
+
+/* Phonetic */
+.lv-tooltip-phonetic {
+  font-size: 12px;
+  color: var(--lv-muted, #9ca3af);
+  margin-bottom: 4px;
+  font-family: 'Lucida Sans Unicode', 'Arial Unicode MS', sans-serif;
+}
+
+/* Loading state */
+.lv-tooltip-loading {
+  color: var(--lv-muted, #6b7280);
+  font-style: italic;
+}
+
+/* Section divider */
+.lv-tooltip-divider {
+  height: 1px;
+  background: var(--lv-divider, #374151);
+  margin: 8px 0;
 }
 
 /* "Mastered" button */
@@ -80,7 +150,7 @@
   padding: 4px 12px;
   font-size: 12px;
   color: #fff;
-  background: #3b82f6;
+  background: var(--lv-accent, #3b82f6);
   border: none;
   border-radius: 4px;
   cursor: pointer;
@@ -88,7 +158,7 @@
 }
 
 .lv-tooltip-mastered:hover {
-  background: #2563eb;
+  background: var(--lv-accent-hover, #2563eb);
 }
 
 /* "Add word" button (selection popup) */
@@ -98,7 +168,7 @@
   padding: 4px 12px;
   font-size: 12px;
   color: #fff;
-  background: #10b981;
+  background: var(--lv-success, #10b981);
   border: none;
   border-radius: 4px;
   cursor: pointer;
@@ -106,11 +176,11 @@
 }
 
 .lv-tooltip-add:hover {
-  background: #059669;
+  background: var(--lv-success-hover, #059669);
 }
 
 .lv-tooltip-add--done {
-  background: #6b7280;
+  background: var(--lv-done, #6b7280);
   cursor: default;
 }
 
@@ -118,11 +188,216 @@
 .lv-tooltip-hint {
   margin-top: 6px;
   font-size: 11px;
-  color: #9ca3af;
+  color: var(--lv-muted, #9ca3af);
 }
 
-/* Loading state */
-.lv-tooltip-loading {
-  color: #6b7280;
+/* Restore link (mastered word) */
+.lv-tooltip-restore {
+  color: var(--lv-accent, #60a5fa);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.lv-tooltip-restore:hover {
+  text-decoration: underline;
+}
+
+/* ===== Flashcard Section ===== */
+
+/* Flashcard trigger button (small square) */
+.lv-flashcard-trigger {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  background: var(--lv-tag-bg, #f1f5f9);
+  color: var(--lv-accent, #2563eb);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.lv-flashcard-trigger:hover {
+  background: var(--lv-input-bg, #e2e8f0);
+}
+
+/* Flashcard editor */
+.lv-flashcard-editor {
+  min-width: 280px;
+  max-width: 320px;
+}
+
+.lv-flashcard-editor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--lv-divider, #374151);
+}
+
+.lv-flashcard-editor-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--lv-fg-title, #ffffff);
+}
+
+.lv-flashcard-editor-close {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  color: var(--lv-muted, #9ca3af);
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+}
+
+.lv-flashcard-editor-close:hover {
+  color: var(--lv-fg, #f3f4f6);
+  background: var(--lv-tag-bg, #374151);
+}
+
+/* Flashcard actions */
+.lv-flashcard-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  justify-content: flex-end;
+}
+
+.lv-flashcard-cancel-btn {
+  padding: 5px 12px;
+  font-size: 12px;
+  color: var(--lv-muted, #9ca3af);
+  background: transparent;
+  border: 1px solid var(--lv-border, #374151);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.lv-flashcard-cancel-btn:hover {
+  color: var(--lv-fg, #f3f4f6);
+  border-color: var(--lv-fg, #f3f4f6);
+}
+
+.lv-flashcard-create-btn {
+  padding: 5px 14px;
+  font-size: 12px;
+  color: #fff;
+  background: var(--lv-accent, #2563eb);
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.lv-flashcard-create-btn:hover {
+  background: var(--lv-accent-hover, #1d4ed8);
+}
+
+/* Flashcard back input */
+.lv-flashcard-back-input {
+  width: 100%;
+  margin-top: 8px;
+  padding: 8px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--lv-fg, #f3f4f6);
+  background: var(--lv-input-bg, #374151);
+  border: 1px solid var(--lv-input-border, #4b5563);
+  border-radius: 6px;
+  outline: none;
+  font-family: inherit;
+  box-sizing: border-box;
+  resize: vertical;
+}
+
+.lv-flashcard-back-input:focus {
+  border-color: var(--lv-accent, #3b82f6);
+}
+
+/* Flashcard front preview wrapper */
+.lv-flashcard-front-wrapper {
+  position: relative;
+  margin-top: 4px;
+}
+
+/* Flashcard front preview */
+.lv-flashcard-front {
+  font-size: 12px;
+  color: var(--lv-muted, #9ca3af);
+  word-break: break-word;
+  padding: 6px 28px 6px 8px;
+  background: var(--lv-tag-bg, #374151);
+  border-radius: 4px;
   font-style: italic;
+  min-height: 20px;
+}
+
+/* Translation toggle button */
+.lv-flashcard-translation-toggle {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--lv-accent, #3b82f6);
+  background: var(--lv-bg, #1f2937);
+  border: 1px solid var(--lv-border, #374151);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s;
+  padding: 0;
+}
+
+.lv-flashcard-translation-toggle:hover {
+  background: var(--lv-accent, #3b82f6);
+  color: #fff;
+  border-color: var(--lv-accent, #3b82f6);
+}
+
+/* Flashcard hint text */
+.lv-flashcard-hint {
+  font-size: 10px;
+  color: var(--lv-muted, #9ca3af);
+  margin-top: 6px;
+  font-style: italic;
+}
+
+/* Tag suggestions */
+.lv-flashcard-tag-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.lv-flashcard-tag-pill {
+  display: inline-block;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--lv-accent, #2563eb);
+  background: var(--lv-tag-bg, #f1f5f9);
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.lv-flashcard-tag-pill:hover {
+  background: var(--lv-input-bg, #e2e8f0);
 }

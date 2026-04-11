@@ -1,0 +1,507 @@
+/* ===== Side Panel: 知识卡片查看器 ===== */
+
+:root {
+  --sp-bg: #f8fafc;
+  --sp-surface: #ffffff;
+  --sp-text: #0f172a;
+  --sp-text-secondary: #64748b;
+  --sp-text-muted: #94a3b8;
+  --sp-border: #e2e8f0;
+  --sp-hover: #f1f5f9;
+  --sp-accent: #2563eb;
+  --sp-accent-hover: #1d4ed8;
+  --sp-accent-light: #eff6ff;
+  --sp-danger: #ef4444;
+  --sp-danger-bg: #fef2f2;
+}
+
+[data-lv-theme="dark"] {
+  --sp-bg: #0f172a;
+  --sp-surface: #1e293b;
+  --sp-text: #f1f5f9;
+  --sp-text-secondary: #94a3b8;
+  --sp-text-muted: #64748b;
+  --sp-border: #334155;
+  --sp-hover: #1e293b;
+  --sp-accent: #3b82f6;
+  --sp-accent-hover: #2563eb;
+  --sp-accent-light: #172554;
+  --sp-danger: #f87171;
+  --sp-danger-bg: #1c1917;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: var(--sp-bg);
+  color: var(--sp-text);
+  line-height: 1.5;
+}
+
+/* Container */
+.sp-container {
+  padding: 16px;
+  min-height: 100vh;
+}
+
+/* Header */
+.sp-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.sp-title {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.sp-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sp-count {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--sp-accent);
+  background: var(--sp-accent-light);
+  padding: 2px 10px;
+  border-radius: 999px;
+}
+
+.sp-add-btn {
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #fff;
+  background: var(--sp-accent);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.sp-add-btn:hover {
+  background: var(--sp-accent-hover);
+}
+
+/* Add Form */
+.sp-add-form {
+  background: var(--sp-surface);
+  border: 1px solid var(--sp-border);
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.sp-add-form-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.sp-add-form-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--sp-text);
+}
+
+.sp-add-form-close {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  color: var(--sp-text-muted);
+  background: none;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.sp-add-form-close:hover {
+  color: var(--sp-text);
+  background: var(--sp-hover);
+}
+
+.sp-add-input {
+  width: 100%;
+  padding: 8px 10px;
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--sp-text);
+  background: var(--sp-bg);
+  border: 1px solid var(--sp-border);
+  border-radius: 6px;
+  outline: none;
+  margin-bottom: 8px;
+  transition: border-color 0.15s;
+}
+
+.sp-add-input:focus {
+  border-color: var(--sp-accent);
+}
+
+.sp-add-input::placeholder {
+  color: var(--sp-text-muted);
+}
+
+.sp-add-textarea {
+  width: 100%;
+  padding: 8px 10px;
+  font-size: 13px;
+  font-family: inherit;
+  line-height: 1.5;
+  color: var(--sp-text);
+  background: var(--sp-bg);
+  border: 1px solid var(--sp-border);
+  border-radius: 6px;
+  outline: none;
+  resize: vertical;
+  margin-bottom: 8px;
+  transition: border-color 0.15s;
+}
+
+.sp-add-textarea:focus {
+  border-color: var(--sp-accent);
+}
+
+.sp-add-textarea::placeholder {
+  color: var(--sp-text-muted);
+}
+
+/* Back input with tag highlighting - 双层叠加方案 */
+.sp-input-with-tags {
+  position: relative;
+  min-height: 80px;
+  background: var(--sp-bg);
+  border: 1px solid var(--sp-border);
+  border-radius: 6px;
+  transition: border-color 0.15s;
+  overflow: hidden;
+}
+
+.sp-input-with-tags--focused {
+  border-color: var(--sp-accent);
+}
+
+/* 高亮层 - 底层显示带样式的文本 */
+.sp-highlight-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 8px 10px;
+  font-size: 13px;
+  font-family: inherit;
+  line-height: 1.5;
+  color: var(--sp-text);
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow: auto;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* 标签高亮样式 - Flomo 风格：仅文字变色，更柔和 */
+.sp-highlight-tag {
+  color: var(--sp-accent) !important;
+  font-weight: 600;
+  background: transparent;
+}
+
+/* 输入层 - 上层接收输入，透明背景 */
+.sp-textarea-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  padding: 8px 10px;
+  font-size: 13px;
+  font-family: inherit;
+  line-height: 1.5;
+  color: transparent;
+  background: transparent;
+  border: none;
+  outline: none;
+  resize: none;
+  caret-color: var(--sp-text);
+  z-index: 2;
+}
+
+.sp-textarea-layer::placeholder {
+  color: var(--sp-text-muted);
+}
+
+.sp-add-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+/* Search */
+.sp-search {
+  margin-bottom: 12px;
+}
+
+.sp-search-input {
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--sp-text);
+  background: var(--sp-surface);
+  border: 1px solid var(--sp-border);
+  border-radius: 8px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.sp-search-input:focus {
+  border-color: var(--sp-accent);
+}
+
+.sp-search-input::placeholder {
+  color: var(--sp-text-muted);
+}
+
+/* Empty state */
+.sp-empty {
+  text-align: center;
+  padding: 40px 16px;
+  color: var(--sp-text-muted);
+  font-size: 13px;
+}
+
+/* Card list */
+.sp-card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Card */
+.sp-card {
+  background: var(--sp-surface);
+  border: 1px solid var(--sp-border);
+  border-radius: 10px;
+  padding: 12px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.sp-card:hover {
+  border-color: var(--sp-accent);
+}
+
+.sp-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.sp-card-date {
+  font-size: 11px;
+  color: var(--sp-text-muted);
+}
+
+.sp-card-front {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+/* Expanded detail */
+.sp-card-detail {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--sp-border);
+}
+
+.sp-card-back {
+  font-size: 13px;
+  color: var(--sp-text-secondary);
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.sp-card-back--empty {
+  color: var(--sp-text-muted);
+  font-style: italic;
+}
+
+.sp-card-context {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--sp-text-muted);
+}
+
+.sp-card-context-label {
+  font-weight: 600;
+  margin-right: 4px;
+}
+
+.sp-card-context p {
+  margin-top: 2px;
+  padding: 6px 8px;
+  background: var(--sp-bg);
+  border-radius: 6px;
+  font-style: italic;
+  line-height: 1.4;
+}
+
+/* Card tags - blue highlight */
+.sp-card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.sp-card-tag {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--sp-accent);
+  background: var(--sp-accent-light);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.sp-card-tag-hash {
+  color: var(--sp-accent);
+  font-weight: 600;
+}
+
+/* Tag filters */
+.sp-tag-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--sp-border);
+}
+
+.sp-tag-filter-btn {
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--sp-text-secondary);
+  background: var(--sp-surface);
+  border: 1px solid var(--sp-border);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.sp-tag-filter-btn:hover {
+  border-color: var(--sp-accent);
+  color: var(--sp-accent);
+}
+
+.sp-tag-filter-btn--active {
+  background: var(--sp-accent);
+  color: #fff;
+  border-color: var(--sp-accent);
+}
+
+/* Actions */
+.sp-card-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.sp-btn {
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid var(--sp-border);
+  border-radius: 6px;
+  cursor: pointer;
+  background: var(--sp-surface);
+  color: var(--sp-text-secondary);
+  transition: all 0.15s;
+  text-decoration: none;
+}
+
+.sp-btn:hover {
+  border-color: var(--sp-accent);
+  color: var(--sp-accent);
+}
+
+.sp-btn--save {
+  background: var(--sp-accent);
+  color: #fff;
+  border-color: var(--sp-accent);
+}
+
+.sp-btn--save:hover {
+  background: var(--sp-accent-hover);
+}
+
+.sp-btn--cancel {
+  color: var(--sp-text-muted);
+}
+
+.sp-btn--delete {
+  color: var(--sp-danger);
+  border-color: var(--sp-danger);
+}
+
+.sp-btn--delete:hover {
+  background: var(--sp-danger-bg);
+}
+
+.sp-btn--confirm {
+  background: var(--sp-danger);
+  color: #fff;
+  border-color: var(--sp-danger);
+}
+
+/* Edit */
+.sp-card-edit {
+  margin-top: 2px;
+}
+
+.sp-edit-textarea {
+  width: 100%;
+  padding: 8px;
+  font-size: 13px;
+  font-family: inherit;
+  line-height: 1.5;
+  background: var(--sp-bg);
+  color: var(--sp-text);
+  border: 1px solid var(--sp-border);
+  border-radius: 6px;
+  resize: vertical;
+}
+
+.sp-edit-textarea:focus {
+  outline: none;
+  border-color: var(--sp-accent);
+}
+
+.sp-edit-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}

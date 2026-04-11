@@ -1,58 +1,67 @@
 import { useEffect, useState } from "react";
-import { sendModeChange, sendTranslationModeChange } from "../lib/messages";
+import { sendFlagsChange } from "../lib/messages";
+import type { FeatureFlags } from "../lib/mode-manager";
 import "./App.css";
 
-interface ModeState {
-  learning: boolean;
-  writing: boolean;
-  translation: boolean;
+const MODES_KEY = "lv_modes";
+const DEFAULT_FLAGS: FeatureFlags = { translate: true, flashcard: false };
+
+interface ToggleOption {
+  key: keyof FeatureFlags;
+  label: string;
+  desc: string;
 }
 
-const MODES_KEY = "lv_modes";
-const DEFAULT_MODES: ModeState = {
-  learning: true,
-  writing: false,
-  translation: true,
-};
+const TOGGLES: ToggleOption[] = [
+  { key: "translate", label: "翻译", desc: "划词翻译英文 · 生词自动标注" },
+  { key: "flashcard", label: "标记", desc: "划词创建知识卡片" },
+];
 
 function App() {
-  const [modes, setModes] = useState<ModeState>(DEFAULT_MODES);
+  const [flags, setFlags] = useState<FeatureFlags>(DEFAULT_FLAGS);
 
   useEffect(() => {
     browser.storage.local
       .get(MODES_KEY)
       .then((result) => {
-        const stored = result[MODES_KEY] as Partial<ModeState> | undefined;
-        if (stored) {
-          setModes({ ...DEFAULT_MODES, ...stored });
+        const stored = result[MODES_KEY] as any;
+        if (stored && typeof stored.translate === "boolean") {
+          setFlags({ translate: stored.translate, flashcard: !!stored.flashcard });
+        } else if (stored?.activeMode) {
+          // 旧格式兼容
+          const migrated: FeatureFlags =
+            stored.activeMode === "flashcard"
+              ? { translate: false, flashcard: true }
+              : stored.activeMode === "off"
+                ? { translate: false, flashcard: false }
+                : { translate: true, flashcard: false };
+          setFlags(migrated);
         }
       })
       .catch((err) => {
-        console.warn("[LinguaVeil] Failed to load mode state:", err);
+        console.warn("[LinguaVeil] Failed to load flags:", err);
       });
   }, []);
 
-  const toggleLearning = async () => {
-    const next = !modes.learning;
-    const updated = { ...modes, learning: next };
-    setModes(updated);
-    await browser.storage.local.set({ [MODES_KEY]: updated });
+  const handleToggle = async (key: keyof FeatureFlags) => {
+    const next = { ...flags, [key]: !flags[key] };
+    setFlags(next);
+    await browser.storage.local.set({ [MODES_KEY]: next });
     try {
-      await sendModeChange(next);
+      await sendFlagsChange(next);
     } catch {
       /* tab may not exist */
     }
   };
 
-  const toggleTranslation = async () => {
-    const next = !modes.translation;
-    const updated = { ...modes, translation: next };
-    setModes(updated);
-    await browser.storage.local.set({ [MODES_KEY]: updated });
+  const openSidePanel = async () => {
+    const chromeApi = (globalThis as any).chrome;
     try {
-      await sendTranslationModeChange(next);
+      const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
+      await chromeApi.sidePanel.open({ tabId: tab?.id });
     } catch {
-      /* tab may not exist */
+      const url = browser.runtime.getURL("/flashcards.html" as any);
+      browser.tabs.create({ url });
     }
   };
 
@@ -60,61 +69,33 @@ function App() {
     <div className="popup-container">
       <header className="popup-header">
         <h1 className="popup-title">LinguaVeil</h1>
-        <p className="popup-subtitle">插件设置 · 选择适合您的使用模式</p>
+        <p className="popup-subtitle">能力开关</p>
       </header>
 
-      <div className="mode-list">
-        <div className="mode-card">
-          <div className="mode-icon">📖</div>
-          <div className="mode-info">
-            <div className="mode-name-row">
-              <span className="mode-name">学习模式</span>
+      <div className="feature-toggles">
+        {TOGGLES.map((opt) => (
+          <div key={opt.key} className="feature-toggle">
+            <div className="feature-toggle-info">
+              <span className="feature-toggle-label">{opt.label}</span>
+              <span className="feature-toggle-desc">{opt.desc}</span>
             </div>
-            <div className="mode-desc">划词添加生词，自动标注已收录的生词</div>
+            <button
+              className={`toggle-switch ${flags[opt.key] ? "toggle-switch--on" : ""}`}
+              onClick={() => handleToggle(opt.key)}
+              role="switch"
+              aria-checked={flags[opt.key]}
+            >
+              <span className="toggle-switch-thumb" />
+            </button>
           </div>
-          <label className="toggle">
-            <input
-              type="checkbox"
-              checked={modes.learning}
-              onChange={toggleLearning}
-            />
-            <span className="toggle-slider" />
-          </label>
-        </div>
-
-        <div className="mode-card">
-          <div className="mode-icon">🌐</div>
-          <div className="mode-info">
-            <div className="mode-name-row">
-              <span className="mode-name">划词翻译</span>
-            </div>
-            <div className="mode-desc">选中文本即时翻译，支持单词和句子</div>
-          </div>
-          <label className="toggle">
-            <input
-              type="checkbox"
-              checked={modes.translation}
-              onChange={toggleTranslation}
-            />
-            <span className="toggle-slider" />
-          </label>
-        </div>
-
-        <div className="mode-card mode-card--disabled">
-          <div className="mode-icon">✍️</div>
-          <div className="mode-info">
-            <div className="mode-name-row">
-              <span className="mode-name">写作模式</span>
-              <span className="mode-badge">即将推出</span>
-            </div>
-            <div className="mode-desc">辅助英文写作与表达润色</div>
-          </div>
-          <label className="toggle">
-            <input type="checkbox" checked={modes.writing} disabled />
-            <span className="toggle-slider" />
-          </label>
-        </div>
+        ))}
       </div>
+
+      <div className="popup-divider" />
+
+      <button className="sidepanel-btn" onClick={openSidePanel}>
+        打开知识卡片面板
+      </button>
     </div>
   );
 }
