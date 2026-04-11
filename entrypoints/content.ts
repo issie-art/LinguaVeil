@@ -88,11 +88,13 @@ export default defineContentScript({
       }
     }
 
-    // 目录功能：自动初始化（但不显示面包屑）
-    initTocWidget();
-    // 如果开关开启，显示面包屑
+    // 目录功能：延迟初始化，避免阻塞主流程
     if (flags.toc) {
-      showBreadcrumb(true);
+      // 如果开关已开启，初始化并显示面包屑
+      showBreadcrumb(true).catch(console.error);
+    } else {
+      // 预初始化（不显示），加快后续响应
+      initTocWidget().catch(console.error);
     }
 
     // 监听 DOM 变化（translate 开启时需要）
@@ -125,7 +127,7 @@ export default defineContentScript({
       if (message.type === "TOGGLE_TOC") {
         // 切换面包屑显示状态
         const flags = getFlags();
-        showBreadcrumb(flags.toc);
+        showBreadcrumb(flags.toc).catch(console.error);
         return true;
       }
       return false;
@@ -163,7 +165,7 @@ async function handleFlagsChange(newFlags: FeatureFlags): Promise<void> {
 
   // toc 开关变化 - 控制面包屑显示/隐藏
   if (prevFlags.toc !== newFlags.toc) {
-    showBreadcrumb(newFlags.toc);
+    showBreadcrumb(newFlags.toc).catch(console.error);
   }
 
   // 任一能力从全关到开启 → 确保 tooltip 初始化

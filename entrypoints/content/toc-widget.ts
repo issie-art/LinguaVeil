@@ -12,46 +12,71 @@ let scrollListener: (() => void) | null = null;
 let currentHighlightId: string | null = null;
 let isExpanded = false; // 目录面板默认收起
 let isBreadcrumbVisible = false; // 面包屑默认隐藏，由 Popup 开关控制
+let initPromise: Promise<boolean> | null = null; // 初始化状态跟踪
 
 /** 初始化目录组件（创建面包屑按钮，但不显示） */
-export function initTocWidget(): void {
-  if (tocToggle) return; // 已初始化
+export function initTocWidget(): Promise<boolean> {
+  // 如果已在初始化中，返回现有 Promise
+  if (initPromise) return initPromise;
+  
+  // 如果已初始化，立即返回成功
+  if (tocToggle) return Promise.resolve(true);
 
-  // 延迟执行，确保页面内容已加载
-  const init = () => {
-    // 扫描标题
-    tocItems = scanHeadings();
-    if (tocItems.length === 0) {
-      console.log("[LinguaVeil TOC] No headings found");
-      return;
+  initPromise = new Promise((resolve) => {
+    const init = () => {
+      // 扫描标题
+      tocItems = scanHeadings();
+      if (tocItems.length === 0) {
+        console.log("[LinguaVeil TOC] No headings found");
+        initPromise = null;
+        resolve(false);
+        return;
+      }
+
+      console.log("[LinguaVeil TOC] Found", tocItems.length, "top-level headings");
+
+      // 创建面包屑切换按钮（默认隐藏）
+      createToggleButton();
+      
+      // 创建目录面板（默认隐藏）
+      createTocPanel();
+      
+      // 绑定滚动监听
+      bindScrollSync();
+      
+      // 如果之前请求显示面包屑，现在应用
+      if (isBreadcrumbVisible && tocToggle) {
+        tocToggle.style.display = "flex";
+      }
+      
+      resolve(true);
+    };
+
+    // 如果页面已加载完成，立即执行；否则等待加载
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+      setTimeout(init, 0); // 使用 0 延迟，让当前调用栈完成
+    } else {
+      document.addEventListener('DOMContentLoaded', init);
     }
-
-    console.log("[LinguaVeil TOC] Found", tocItems.length, "top-level headings");
-
-    // 创建面包屑切换按钮（默认隐藏）
-    createToggleButton();
-    
-    // 创建目录面板（默认隐藏）
-    createTocPanel();
-    
-    // 绑定滚动监听
-    bindScrollSync();
-  };
-
-  // 如果页面已加载完成，立即执行；否则等待加载
-  if (document.readyState === 'complete' || document.readyState === 'interactive') {
-    setTimeout(init, 100); // 短暂延迟确保 DOM 稳定
-  } else {
-    document.addEventListener('DOMContentLoaded', init);
-  }
+  });
+  
+  return initPromise;
 }
 
 /** 显示/隐藏面包屑按钮 */
-export function showBreadcrumb(show: boolean): void {
+export async function showBreadcrumb(show: boolean): Promise<void> {
   isBreadcrumbVisible = show;
+  
+  // 如果组件未初始化，先初始化
+  if (!tocToggle && show) {
+    await initTocWidget();
+  }
+  
+  // 应用显示状态
   if (tocToggle) {
     tocToggle.style.display = show ? "flex" : "none";
   }
+  
   // 隐藏面包屑时，同时收起目录面板
   if (!show && tocPanel) {
     isExpanded = false;
@@ -70,7 +95,6 @@ function createToggleButton(): void {
       <line x1="3" y1="12" x2="21" y2="12"></line>
       <line x1="3" y1="18" x2="21" y2="18"></line>
     </svg>
-    <span class="lv-toc-toggle-text">目录</span>
   `;
   tocToggle.title = "点击展开目录";
   
@@ -174,6 +198,9 @@ export function destroyTocWidget(): void {
   
   tocItems = [];
   currentHighlightId = null;
+  isBreadcrumbVisible = false;
+  isExpanded = false;
+  initPromise = null; // 重置初始化状态
 }
 
 /** 检查目录是否已初始化 */

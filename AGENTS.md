@@ -7,5 +7,3 @@
 - [技术栈文档](docs/design-docs/tech.md)
 - [架构文档](docs/design-docs/architecture.md)
 
-## 常见任务
-- 添加新功能：参考 [执行中的任务计划](docs/exec-plans/active/)
