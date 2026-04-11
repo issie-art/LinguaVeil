@@ -7,6 +7,12 @@ import {
   getCardCount,
   type FlashcardEntry,
 } from "../lib/flashcard-store";
+import {
+  exportToObsidian,
+  exportToNotion,
+  downloadObsidianFiles,
+  downloadFile,
+} from "../lib/export";
 import FlashcardList from "./FlashcardList";
 
 /** 从卡片列表中提取所有唯一标签 */
@@ -94,6 +100,7 @@ function App() {
   const [isAdding, setIsAdding] = useState(false);
   const [newFront, setNewFront] = useState("");
   const [newBack, setNewBack] = useState("");
+  const [showExportMenu, setShowExportMenu] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // 提取所有唯一标签
@@ -226,12 +233,52 @@ function App() {
     await loadCards();
   };
 
+  // 导出处理函数
+  const handleExportObsidian = () => {
+    if (cards.length === 0) {
+      alert("没有知识卡片可导出");
+      return;
+    }
+    const files = exportToObsidian(cards);
+    downloadObsidianFiles(files);
+    setShowExportMenu(false);
+  };
+
+  const handleExportNotion = () => {
+    if (cards.length === 0) {
+      alert("没有知识卡片可导出");
+      return;
+    }
+    const { filename, content } = exportToNotion(cards);
+    downloadFile(filename, content, "text/csv");
+    setShowExportMenu(false);
+  };
+
   return (
     <div className="sp-container">
       <header className="sp-header">
         <h1 className="sp-title">知识卡片</h1>
         <div className="sp-header-actions">
           <span className="sp-count">{count}</span>
+          <div className="sp-export-wrapper">
+            <button 
+              className="sp-export-btn" 
+              onClick={() => setShowExportMenu(!showExportMenu)}
+              title="导出"
+            >
+              导出 ▼
+            </button>
+            {showExportMenu && (
+              <div className="sp-export-menu">
+                <button className="sp-export-option" onClick={handleExportObsidian}>
+                  📄 Obsidian (Markdown)
+                </button>
+                <button className="sp-export-option" onClick={handleExportNotion}>
+                  📊 Notion (CSV)
+                </button>
+              </div>
+            )}
+          </div>
           <button className="sp-add-btn" onClick={handleAddNew} title="添加卡片">
             + 添加
           </button>

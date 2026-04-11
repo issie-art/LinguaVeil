@@ -421,9 +421,12 @@ async function showFlashcardEditor(
       // 解析标签和内容（允许空内容）
       const { content, tags } = parseTagsFromText(rawInput);
 
-      // 获取当前显示的正面内容（原文或译文）
-      const frontEl = tooltipEl?.querySelector(".lv-flashcard-front");
-      const currentFront = frontEl?.textContent?.trim() || text;
+      // 获取当前显示的正面内容（从 data 属性获取完整文本，避免截断）
+      const frontEl = tooltipEl?.querySelector(".lv-flashcard-front") as HTMLElement | null;
+      const isShowingTranslation = frontEl?.hasAttribute("data-front-translation");
+      const currentFront = isShowingTranslation
+        ? (frontEl?.dataset.translationText || text)
+        : (frontEl?.dataset.originalText || text);
 
       await addCard({
         front: currentFront,

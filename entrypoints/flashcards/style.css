@@ -93,6 +93,60 @@ body {
   background: var(--sp-accent-hover);
 }
 
+/* Export Button & Menu */
+.sp-export-wrapper {
+  position: relative;
+}
+
+.sp-export-btn {
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--sp-text-secondary);
+  background: var(--sp-surface);
+  border: 1px solid var(--sp-border);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.sp-export-btn:hover {
+  background: var(--sp-hover);
+  border-color: var(--sp-accent);
+  color: var(--sp-accent);
+}
+
+.sp-export-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 4px;
+  background: var(--sp-surface);
+  border: 1px solid var(--sp-border);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 100;
+  min-width: 160px;
+  overflow: hidden;
+}
+
+.sp-export-option {
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 12px;
+  text-align: left;
+  color: var(--sp-text);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.sp-export-option:hover {
+  background: var(--sp-hover);
+}
+
 /* Add Form */
 .sp-add-form {
   background: var(--sp-surface);
