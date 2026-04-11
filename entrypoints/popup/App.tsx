@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
-import { sendFlagsChange } from "../lib/messages";
+import { sendFlagsChange, sendToggleToc } from "../lib/messages";
 import type { FeatureFlags } from "../lib/mode-manager";
 import "./App.css";
 
 const MODES_KEY = "lv_modes";
-const DEFAULT_FLAGS: FeatureFlags = { translate: true, flashcard: false };
+const DEFAULT_FLAGS: FeatureFlags = { translate: true, flashcard: false, toc: false };
 
 interface ToggleOption {
   key: keyof FeatureFlags;
@@ -15,6 +15,7 @@ interface ToggleOption {
 const TOGGLES: ToggleOption[] = [
   { key: "translate", label: "翻译", desc: "划词翻译英文 · 生词自动标注" },
   { key: "flashcard", label: "标记", desc: "划词创建知识卡片" },
+  { key: "toc", label: "目录", desc: "生成文章目录导航" },
 ];
 
 function App() {
@@ -26,15 +27,15 @@ function App() {
       .then((result) => {
         const stored = result[MODES_KEY] as any;
         if (stored && typeof stored.translate === "boolean") {
-          setFlags({ translate: stored.translate, flashcard: !!stored.flashcard });
+          setFlags({ translate: stored.translate, flashcard: !!stored.flashcard, toc: !!stored.toc });
         } else if (stored?.activeMode) {
           // 旧格式兼容
           const migrated: FeatureFlags =
             stored.activeMode === "flashcard"
-              ? { translate: false, flashcard: true }
+              ? { translate: false, flashcard: true, toc: false }
               : stored.activeMode === "off"
-                ? { translate: false, flashcard: false }
-                : { translate: true, flashcard: false };
+                ? { translate: false, flashcard: false, toc: false }
+                : { translate: true, flashcard: false, toc: false };
           setFlags(migrated);
         }
       })
@@ -47,10 +48,20 @@ function App() {
     const next = { ...flags, [key]: !flags[key] };
     setFlags(next);
     await browser.storage.local.set({ [MODES_KEY]: next });
-    try {
-      await sendFlagsChange(next);
-    } catch {
-      /* tab may not exist */
+    
+    // 目录开关特殊处理：直接触发显示/隐藏
+    if (key === "toc") {
+      try {
+        await sendToggleToc();
+      } catch {
+        /* tab may not exist */
+      }
+    } else {
+      try {
+        await sendFlagsChange(next);
+      } catch {
+        /* tab may not exist */
+      }
     }
   };
 

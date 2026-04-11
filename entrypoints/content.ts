@@ -6,6 +6,7 @@ import {
 } from "./content/scanner";
 import { initTooltip, destroyTooltip } from "./content/tooltip";
 import { startObserving, stopObserving } from "./content/observer";
+import { initTocWidget, destroyTocWidget, isTocInitialized, showBreadcrumb } from "./content/toc-widget";
 import { getVocabWords } from "./lib/word-store";
 import {
   loadFlags,
@@ -87,6 +88,13 @@ export default defineContentScript({
       }
     }
 
+    // 目录功能：自动初始化（但不显示面包屑）
+    initTocWidget();
+    // 如果开关开启，显示面包屑
+    if (flags.toc) {
+      showBreadcrumb(true);
+    }
+
     // 监听 DOM 变化（translate 开启时需要）
     let prevCount = findContainers().length;
 
@@ -114,6 +122,12 @@ export default defineContentScript({
         handleFlagsChange(message.flags);
         return true; // 异步处理
       }
+      if (message.type === "TOGGLE_TOC") {
+        // 切换面包屑显示状态
+        const flags = getFlags();
+        showBreadcrumb(flags.toc);
+        return true;
+      }
       return false;
     });
   },
@@ -127,8 +141,8 @@ async function handleFlagsChange(newFlags: FeatureFlags): Promise<void> {
   const prevFlags = getFlags();
   await setFlags(newFlags);
 
-  const anyOn = newFlags.translate || newFlags.flashcard;
-  const wasAnyOn = prevFlags.translate || prevFlags.flashcard;
+  const anyOn = newFlags.translate || newFlags.flashcard || newFlags.toc;
+  const wasAnyOn = prevFlags.translate || prevFlags.flashcard || prevFlags.toc;
 
   // translate 关闭 → 停止扫描/标注
   if (prevFlags.translate && !newFlags.translate) {
@@ -145,7 +159,11 @@ async function handleFlagsChange(newFlags: FeatureFlags): Promise<void> {
     if (findContainers().length > 0) {
       startObserving(rescan);
     }
-    return;
+  }
+
+  // toc 开关变化 - 控制面包屑显示/隐藏
+  if (prevFlags.toc !== newFlags.toc) {
+    showBreadcrumb(newFlags.toc);
   }
 
   // 任一能力从全关到开启 → 确保 tooltip 初始化

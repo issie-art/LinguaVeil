@@ -8,11 +8,12 @@
 export interface FeatureFlags {
   translate: boolean;
   flashcard: boolean;
+  toc: boolean;
 }
 
 const MODES_KEY = "lv_modes";
 
-const DEFAULT_FLAGS: FeatureFlags = { translate: true, flashcard: false };
+const DEFAULT_FLAGS: FeatureFlags = { translate: true, flashcard: false, toc: false };
 
 /** 当前内存中的能力状态 */
 let currentFlags: FeatureFlags = { ...DEFAULT_FLAGS };
@@ -39,11 +40,11 @@ function migrateFromLegacy(stored: any): FeatureFlags | null {
     switch (stored.activeMode) {
       case "learning":
       case "translation":
-        return { translate: true, flashcard: false };
+        return { translate: true, flashcard: false, toc: false };
       case "flashcard":
-        return { translate: false, flashcard: true };
+        return { translate: false, flashcard: true, toc: false };
       case "off":
-        return { translate: false, flashcard: false };
+        return { translate: false, flashcard: false, toc: false };
       default:
         return null;
     }
@@ -69,6 +70,7 @@ export async function loadFlags(): Promise<FeatureFlags> {
         currentFlags = {
           translate: stored.translate,
           flashcard: !!stored.flashcard,
+          toc: !!stored.toc,
         };
       } else {
         // 尝试旧格式迁移
@@ -115,5 +117,5 @@ export async function setFlags(flags: FeatureFlags): Promise<void> {
  * 判断是否有任何能力开启
  */
 export function anyFlagOn(): boolean {
-  return currentFlags.translate || currentFlags.flashcard;
+  return currentFlags.translate || currentFlags.flashcard || currentFlags.toc;
 }

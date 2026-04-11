@@ -35,7 +35,8 @@ export type Message =
   | { type: "FLAGS_CHANGED"; flags: FeatureFlags }
   | { type: "MARK_MASTERED"; word: string }
   | { type: "GET_WORD_DATA"; word: string }
-  | { type: "WORD_DATA_RESPONSE"; data: WordEntry | null };
+  | { type: "WORD_DATA_RESPONSE"; data: WordEntry | null }
+  | { type: "TOGGLE_TOC" };
 
 /**
  * Popup -> Background: 发送能力开关变更消息
@@ -55,5 +56,16 @@ export async function forwardToActiveTab(message: Message): Promise<void> {
   const tab = tabs[0];
   if (tab?.id != null) {
     await browser.tabs.sendMessage(tab.id, message);
+  }
+}
+
+/**
+ * Popup -> Content Script: 发送切换目录消息
+ */
+export async function sendToggleToc(): Promise<void> {
+  const tabs = await browser.tabs.query({ active: true, currentWindow: true });
+  const tab = tabs[0];
+  if (tab?.id != null) {
+    await browser.tabs.sendMessage(tab.id, { type: "TOGGLE_TOC" } satisfies Message);
   }
 }
