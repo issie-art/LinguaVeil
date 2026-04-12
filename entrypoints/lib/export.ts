@@ -41,8 +41,6 @@ export function exportToObsidian(cards: FlashcardEntry[]): { filename: string; c
       frontmatter,
       `# ${card.front}`,
       "",
-      card.context ? `> ${card.context}` : "",
-      "",
       "## 背面",
       "",
       card.back,
@@ -61,14 +59,13 @@ export function exportToNotion(cards: FlashcardEntry[]): { filename: string; con
   const filename = "linguaveil-cards.csv";
 
   // CSV 表头
-  const headers = ["正面", "背面", "标签", "上下文", "来源", "创建时间", "正面语言", "背面语言"];
+  const headers = ["正面", "背面", "标签", "来源", "创建时间", "正面语言", "背面语言"];
 
   // CSV 行
   const rows = cards.map((card) => [
     escapeCsv(card.front),
     escapeCsv(card.back),
     escapeCsv(card.topic),
-    escapeCsv(card.context),
     escapeCsv(card.sourceUrl),
     escapeCsv(formatDateTime(card.createdAt)),
     card.langFront,

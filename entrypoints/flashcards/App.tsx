@@ -221,7 +221,6 @@ function App() {
       front: newFront.trim(),
       back: cleanBack,
       topic: tags.join(","),
-      context: "",
       sourceUrl: "",
       langFront: /[\u4e00-\u9fff]/.test(newFront) ? "zh" : "en",
       langBack: /[\u4e00-\u9fff]/.test(cleanBack) ? "zh" : "en",

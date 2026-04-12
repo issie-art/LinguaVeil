@@ -432,7 +432,6 @@ async function showFlashcardEditor(
         front: currentFront,
         back: content,
         topic: tags.join(","),
-        context: extractContext(text),
         sourceUrl: location.href,
         langFront: "en",
         langBack: "zh",

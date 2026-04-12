@@ -9,7 +9,6 @@ export interface FlashcardEntry {
   front: string;
   back: string;
   topic: string;
-  context: string;
   sourceUrl: string;
   langFront: "en" | "zh";
   langBack: "en" | "zh";
@@ -65,7 +64,6 @@ export async function addCard(
     front: data.front,
     back: data.back,
     topic: data.topic ?? "",
-    context: data.context,
     sourceUrl: data.sourceUrl,
     langFront: data.langFront ?? "en",
     langBack: data.langBack ?? "zh",

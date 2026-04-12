@@ -110,13 +110,6 @@ function FlashcardItem({ card, onDelete, onUpdate }: FlashcardItemProps) {
             {card.back || <span className="sp-card-back--empty">(快速标记)</span>}
           </div>
 
-          {card.context && (
-            <div className="sp-card-context">
-              <span className="sp-card-context-label">上下文</span>
-              <p>{card.context}</p>
-            </div>
-          )}
-
           {card.topic && (
             <div className="sp-card-tags">
               {card.topic.split(",").filter(Boolean).map((tag) => (
